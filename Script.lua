@@ -1,2 +1,102 @@
-bG9jYWwgcGxheWVyID0gZ2FtZS5QbGF5ZXJzLkxvY2FsUGxheWVyCmxvY2FsIG1vdXNlID0gcGxheWVyOkdldE1vdXNlKCkKbG9jYWwgZ3VpID0gSW5zdGFuY2UubmV3KCJTY3JlZW5HdWkiLCBwbGF5ZXIuUGxheWVyR3VpKQpndWkuTmFtZSA9ICJEZWx0YUdVSSIKCmxvY2FsIG1haW5GcmFtZSA9IEluc3RhbmNlLm5ldygiRnJhbWUiLCBndWkpCm1haW5GcmFtZS5TaXplID0gVURpbTIubmV3KDAsIDMwMCwgMCwgMjAwKQptYWluRnJhbWUuUG9zaXRpb24gPSBVRGltMi5uZXcoMC41LCAtMTUwLCAwLjUsIC0xMDApCm1haW5GcmFtZS5CYWNrZ3JvdW5kQ29sb3IzID0gQ29sb3IzLm5ldygwLCAwLCAwKQptYWluRnJhbWUuQm9yZGVyU2l6ZVBpeGVsID0gMAptYWluRnJhbWUuVmlzaWJsZSA9IGZhbHNlCgpsb2NhbCByYWluID0gSW5zdGFuY2UubmV3KCJQYXJ0aWNsZUVtaXR0ZXIiLCBtYWluRnJhbWUpCnJhaW4uVGV4dHVyZSA9ICJyYnhhc3NldGlkOi8vMTIzNDU2IgpyYWluLlZlbG9jaXR5U3ByZWFkID0gNTAKcmFpbi5MaWZldGltZSA9IE51bWJlclJhbmdlLm5ldygyKQpyYWluLlJhdGUgPSAxMDAKcmFpbi5TcGVlZCA9IE51bWJlclJhbmdlLm5ldyg1MCkKcmFpbi5TaXplID0gTnVtYmVyU2VxdWVuY2UubmV3KHtOdW1iZXJTZXF1ZW5jZUtleXBvaW50Lm5ldygwLCAwLjUpLCBOdW1iZXJTZXF1ZW5jZUtleXBvaW50Lm5ldygxLCAwLjUpfSkKcmFpbi5UcmFuc3BhcmVuY3kgPSBOdW1iZXJTZXF1ZW5jZS5uZXcoe051bWJlclNlcXVlbmNlS2V5cG9pbnQubmV3KDAsIDApLCBOdW1iZXJTZXF1ZW5jZUtleXBvaW50Lm5ldygxLCAxKX0pCnJhaW4uUm90YXRpb24gPSBOdW1iZXJSYW5nZS5uZXcoMCwgMzYwKQpyYWluLlJvdFNwZWVkID0gTnVtYmVyUmFuZ2UubmV3KC01MCwgNTApCnJhaW4uQ29sb3IgPSBDb2xvclNlcXVlbmNlLm5ldyhDb2xvcjMubmV3KDEsIDEsIDApKQoKbG9jYWwgcGFydG5lcnNoaXBUZXh0ID0gSW5zdGFuY2UubmV3KCJUZXh0TGFiZWwiLCBtYWluRnJhbWUpCnBhcnRuZXJzaGlwVGV4dC5TaXplID0gVURpbTIubmV3KDEsIDAsIDAsIDMwKQpwYXJ0bmVyc2hpcFRleHQuUG9zaXRpb24gPSBVRGltMi5uZXcoMCwgMCwgMCwgMTApCnBhcnRuZXJzaGlwVGV4dC5UZXh0ID0gIti02LHYp9mD2Kkg2KjZitmGINix2LbYpyDhqJYg2Ygg2YXYp9mK2YPZiiBNSSIKcGFydG5lcnNoaXBUZXh0LlRleHRDb2xvcjMgPSBDb2xvcjMubmV3KDEsIDEsIDEpCnBhcnRuZXJzaGlwVGV4dC5CYWNrZ3JvdW5kVHJhbnNwYXJlbmN5ID0gMQpwYXJ0bmVyc2hpcFRleHQuRm9udCA9IEVudW0uRm9udC5TY2lGaQpwYXJ0bmVyc2hpcFRleHQuVGV4dFNpemUgPSAxOAoKbG9jYWwgdG9nZ2xlQnV0dG9uID0gSW5zdGFuY2UubmV3KCJUZXh0QnV0dG9uIiwgbWFpbkZyYW1lKQp0b2dnbGVCdXR0b24uU2l6ZSA9IFVEaW0yLm5ldygwLCAxMDAsIDAsIDQwKQp0b2dnbGVCdXR0b24uUG9zaXRpb24gPSBVRGltMi5uZXcoMC41LCAtNTAsIDAuNSwgLTIwKQp0b2dnbGVCdXR0b24uVGV4dCA9ICLYqtmB2LnZitmEIgp0b2dnbGVCdXR0b24uQmFja2dyb3VuZENvbG9yMyA9IENvbG9yMy5uZXcoMC4yLCAwLjIsIDAuMikKdG9nZ2xlQnV0dG9uLlRleHRDb2xvcjMgPSBDb2xvcjMubmV3KDEsIDEsIDEpCnRvZ2dsZUJ1dHRvbi5Gb250ID0gRW51bS5Gb250LlNjaUZpCnRvZ2dsZUJ1dHRvbi5UZXh0U2l6ZSA9IDE4Cgpsb2NhbCBpc0VuYWJsZWQgPSBmYWxzZQoKdG9nZ2xlQnV0dG9uLk1vdXNlQnV0dG9uMUNsaWNrOkNvbm5lY3QoZnVuY3Rpb24oKQogICAgaXNFbmFibGVkID0gbm90IGlzRW5hYmxlZAogICAgaWYgaXNFbmFibGVkIHRoZW4KICAgICAgICB0b2dnbGVCdXR0b24uVGV4dCA9ICLYpdmK2YLYp9mBIgogICAgICAgIHBsYXllci5DaGFyYWN0ZXIuSHVtYW5vaWQuV2Fsa1NwZWVkID0gNTAKICAgICAgICBwbGF5ZXIuQ2hhcmFjdGVyLkh1bWFub2lkLkp1bXBQb3dlciA9IDEwMAogICAgZWxzZQogICAgICAgIHRvZ2dsZUJ1dHRvbi5UZXh0ID0gItiq2YHYudmK2YQiCiAgICAgICAgcGxheWVyLkNoYXJhY3Rlci5IdW1hbm9pZC5XYWxrU3BlZWQgPSAxNgogICAgICAgIHBsYXllci5DaGFyYWN0ZXIuSHVtYW5vaWQuSnVtcFBvd2VyID0gNTAKICAgIGVuZAplbmQpCgpsb2NhbCBpY29uID0gSW5zdGFuY2UubmV3KCJUZXh0QnV0dG9uIiwgZ3VpKQppY29uLlNpemUgPSBVRGltMi5uZXcoMCwgNTAsIDAsIDUwKQppY29uLlBvc2l0aW9uID0gVURpbTIubmV3KDAsIDEwLCAwLCAxMCkKaWNvbi5UZXh0ID0gIlJlK01pIgppY29uLkJhY2tncm91bmRDb2xvcjMgPSBDb2xvcjMubmV3KDAsIDAsIDApCmljb24uVGV4dENvbG9yMyA9IENvbG9yMy5uZXcoMSwgMSwgMCkKaWNvbi5Gb250ID0gRW51bS5Gb250LlNjaUZpCmljb24uVGV4dFNpemUgPSAyNAoKbG9jYWwgaWNvblJhaW4gPSBJbnN0YW5jZS5uZXcoIlBhcnRpY2xlRW1pdHRlciIsIGljb24pCmljb25SYWluLlRleHR1cmUgPSAicmJ4YXNzZXRpZDovLzEyMzQ1NiIKaWNvblJhaW4uVmVsb2NpdHlTcHJlYWQgPSA1MAppY29uUmFpbi5MaWZldGltZSA9IE51bWJlclJhbmdlLm5ldygyKQppY29uUmFpbi5SYXRlID0gNTAKaWNvblJhaW4uU3BlZWQgPSBOdW1iZXJSYW5nZS5uZXcoNTApCmljb25SYWluLlNpemUgPSBOdW1iZXJTZXF1ZW5jZS5uZXcoe051bWJlclNlcXVlbmNlS2V5cG9pbnQubmV3KDAsIDAuNSksIE51bWJlclNlcXVlbmNlS2V5cG9pbnQubmV3KDEsIDAuNSl9KQppY29uUmFpbi5UcmFuc3BhcmVuY3kgPSBOdW1iZXJTZXF1ZW5jZS5uZXcoe051bWJlclNlcXVlbmNlS2V5cG9pbnQubmV3KDAsIDApLCBOdW1iZXJTZXF1ZW5jZUtleXBvaW50Lm5ldygxLCAxKX0pCmljb25SYWluLlJvdGF0aW9uID0gTnVtYmVyUmFuZ2UubmV3KDAsIDM2MCkKaWNvblJhaW4uUm90U3BlZWQgPSBOdW1iZXJSYW5nZS5uZXcoLTUwLCA1MCkKaWNvblJhaW4uQ29sb3IgPSBDb2xvclNlcXVlbmNlLm5ldyhDb2xvcjMubmV3KDEsIDEsIDApKQoKaWNvbi5Nb3VzZUJ1dHRvbjFDbGljazpDb25uZWN0KGZ1bmN0aW9uKCkKICAgIG1haW5GcmFtZS5WaXNpYmxlID0gbm90IG1haW5GcmFtZS5WaXNpYmxlCmVuZCkKCmxvY2FsIGNsb3NlQnV0dG9uID0gSW5zdGFuY2UubmV3KCJUZXh0QnV0dG9uIiwgbWFpbkZyYW1lKQpjbG9zZUJ1dHRvbi5TaXplID0gVURpbTIubmV3KDAsIDEwMCwgMCwgNDApCmNsb3NlQnV0dG9uLlBvc2l0aW9uID0gVURpbTIubmV3KDAuNSwgLTUwLCAwLjgsIC0yMCkKY2xvc2VCdXR0b24uVGV4dCA9ICLYpdi62YTYp9mCIgpjbG9zZUJ1dHRvbi5CYWNrZ3JvdW5kQ29sb3IzID0gQ29sb3IzLm5ldygwLjIsIDAuMiwgMC4yKQpjbG9zZUJ1dHRvbi5UZXh0Q29sb3IzID0gQ29sb3IzLm5ldygxLCAxLCAxKQpjbG9zZUJ1dHRvbi5Gb250ID0gRW51bS5Gb250LlNjaUZpCmNsb3NlQnV0dG9uLlRleHRTaXplID0gMTgKCmNsb3NlQnV0dG9uLk1vdXNlQnV0dG9uMUNsaWNrOkNvbm5lY3QoZnVuY3Rpb24oKQogICAgbWFpbkZyYW1lLlZpc2libGUgPSBmYWxzZQplbmQpCgp3aGlsZSB0cnVlIGRvCiAgICBmb3IgaSA9IDAsIDEsIDAuMDEgZG8KICAgICAgICBwYXJ0bmVyc2hpcFRleHQuVGV4dENvbG9yMyA9IENvbG9yMy5uZXcoaSwgMSAtIGksIGkpCiAgICAgICAgdG9nZ2xlQnV0dG9uLlRleHRDb2xvcjMgPSBDb2xvcjMubmV3KDEgLSBpLCBpLCAxIC0gaSkKICAgICAgICB3YWl0KDAuMSkKICAgIGVuZAplbmQ=
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local gui = Instance.new("ScreenGui", player.PlayerGui)
+gui.Name = "DeltaGUI"
 
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+
+local rain = Instance.new("ParticleEmitter", mainFrame)
+rain.Texture = "rbxassetid://123456"
+rain.VelocitySpread = 50
+rain.Lifetime = NumberRange.new(2)
+rain.Rate = 100
+rain.Speed = NumberRange.new(100)
+rain.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0.5)})
+rain.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+rain.Rotation = NumberRange.new(0, 360)
+rain.RotSpeed = NumberRange.new(-50, 50)
+rain.Color = ColorSequence.new(Color3.new(1, 1, 0))
+
+local partnershipText = Instance.new("TextLabel", mainFrame)
+partnershipText.Size = UDim2.new(1, 0, 0, 30)
+partnershipText.Position = UDim2.new(0, 0, 0, 10)
+partnershipText.Text = "شراكة بين رضا ᨖ و مايكي MI"
+partnershipText.TextColor3 = Color3.new(1, 1, 1)
+partnershipText.BackgroundTransparency = 1
+partnershipText.Font = Enum.Font.SciFi
+partnershipText.TextSize = 18
+
+local toggleButton = Instance.new("TextButton", mainFrame)
+toggleButton.Size = UDim2.new(0, 100, 0, 40)
+toggleButton.Position = UDim2.new(0.5, -50, 0.5, -20)
+toggleButton.Text = "تفعيل"
+toggleButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.SciFi
+toggleButton.TextSize = 18
+
+local isEnabled = false
+
+toggleButton.MouseButton1Click:Connect(function()
+    isEnabled = not isEnabled
+    if isEnabled then
+        toggleButton.Text = "إيقاف"
+        player.Character.Humanoid.WalkSpeed = 50
+        player.Character.Humanoid.JumpPower = 100
+    else
+        toggleButton.Text = "تفعيل"
+        player.Character.Humanoid.WalkSpeed = 16
+        player.Character.Humanoid.JumpPower = 50
+    end
+end)
+
+local icon = Instance.new("TextButton", gui)
+icon.Size = UDim2.new(0, 50, 0, 50)
+icon.Position = UDim2.new(0, 10, 0, 10)
+icon.Text = "Re+Mi"
+icon.BackgroundColor3 = Color3.new(0, 0, 0)
+icon.TextColor3 = Color3.new(1, 1, 0)
+icon.Font = Enum.Font.SciFi
+icon.TextSize = 24
+
+local iconRain = Instance.new("ParticleEmitter", icon)
+iconRain.Texture = "rbxassetid://123456"
+iconRain.VelocitySpread = 50
+iconRain.Lifetime = NumberRange.new(2)
+iconRain.Rate = 50
+iconRain.Speed = NumberRange.new(50)
+iconRain.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0.5)})
+iconRain.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+iconRain.Rotation = NumberRange.new(0, 360)
+iconRain.RotSpeed = NumberRange.new(-50, 50)
+iconRain.Color = ColorSequence.new(Color3.new(1, 1, 0))
+
+icon.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
+
+local closeButton = Instance.new("TextButton", mainFrame)
+closeButton.Size = UDim2.new(0, 100, 0, 40)
+closeButton.Position = UDim2.new(0.5, -50, 0.8, -20)
+closeButton.Text = "إغلاق"
+closeButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Font = Enum.Font.SciFi
+closeButton.TextSize = 18
+
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+end)
+
+while true do
+    for i = 0, 1, 0.01 do
+        partnershipText.TextColor3 = Color3.new(i, 1 - i, i)
+        toggleButton.TextColor3 = Color3.new(1 - i, i, 1 - i)
+        wait(0.1)
+    end
+end
