@@ -15,7 +15,7 @@ rain.Texture = "rbxassetid://123456"
 rain.VelocitySpread = 50
 rain.Lifetime = NumberRange.new(2)
 rain.Rate = 100
-rain.Speed = NumberRange.new(100)
+rain.Speed = NumberRange.new(50)
 rain.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(1, 0.5)})
 rain.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
 rain.Rotation = NumberRange.new(0, 360)
@@ -34,7 +34,7 @@ partnershipText.TextSize = 18
 local toggleButton = Instance.new("TextButton", mainFrame)
 toggleButton.Size = UDim2.new(0, 100, 0, 40)
 toggleButton.Position = UDim2.new(0.5, -50, 0.5, -20)
-toggleButton.Text = "تفعيل"
+toggleButton.Text = "تفعيل سبيد وطيران"
 toggleButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.Font = Enum.Font.SciFi
@@ -45,11 +45,11 @@ local isEnabled = false
 toggleButton.MouseButton1Click:Connect(function()
     isEnabled = not isEnabled
     if isEnabled then
-        toggleButton.Text = "إيقاف"
+        toggleButton.Text = "إيقاف الكل"
         player.Character.Humanoid.WalkSpeed = 50
         player.Character.Humanoid.JumpPower = 100
     else
-        toggleButton.Text = "تفعيل"
+        toggleButton.Text = "تفعيل سبيد وطيران"
         player.Character.Humanoid.WalkSpeed = 16
         player.Character.Humanoid.JumpPower = 50
     end
