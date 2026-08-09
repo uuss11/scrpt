@@ -7,7 +7,7 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "RE_رضا:  تحالف المناويج"
+gui.Name = "RE_Simple_Gui"
 gui.ResetOnSpawn = false
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -36,7 +36,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 30)
 title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 title.BorderSizePixel = 0
-title.Text = "لوحة RE"
+title.Text = "RE:  رضا: سكربت برمج خصيصًا لاحمد"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.Code
 title.TextSize = 16
@@ -302,4 +302,3 @@ godBtn.MouseButton1Click:Connect(function()
     godBtn.Text = godModeEnabled and "الخلود: تشغيل" or "الخلود: إيقاف"
     godBtn.BackgroundColor3 = godModeEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(50, 50, 50)
 end)
-
