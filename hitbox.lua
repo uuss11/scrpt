@@ -2,11 +2,12 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "RE_Simple_Gui"
+gui.Name = "RE_رضا:  تحالف المناويج"
 gui.ResetOnSpawn = false
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -22,43 +23,8 @@ iconBtn.Font = Enum.Font.Code
 iconBtn.TextSize = 20
 iconBtn.Parent = gui
 
-local dragging = false
-local dragStartPos, dragStartMouse
-local hasDragged = false 
-
-iconBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        hasDragged = false
-        dragStartPos = iconBtn.Position
-        dragStartMouse = input.Position
-    end
-end)
-
-iconBtn.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-        task.delay(0.1, function() hasDragged = false end)
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStartMouse
-        if delta.Magnitude > 5 then hasDragged = true end
-        
-        local newPos = UDim2.new(
-            dragStartPos.X.Scale,
-            dragStartPos.X.Offset + delta.X,
-            dragStartPos.Y.Scale,
-            dragStartPos.Y.Offset + delta.Y
-        )
-        iconBtn.Position = newPos
-    end
-end)
-
 local menuFrame = Instance.new("Frame")
-menuFrame.Size = UDim2.new(0, 200, 0, 200)
+menuFrame.Size = UDim2.new(0, 200, 0, 360)
 menuFrame.Position = UDim2.new(0, 70, 0, 15)
 menuFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 menuFrame.BorderSizePixel = 2
@@ -70,7 +36,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 30)
 title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 title.BorderSizePixel = 0
-title.Text = "RE:  رضا سكربت تحالف المناويج"
+title.Text = "لوحة RE"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.Code
 title.TextSize = 16
@@ -86,55 +52,88 @@ closeBtn.Font = Enum.Font.Code
 closeBtn.TextSize = 16
 closeBtn.Parent = menuFrame
 
-local hitboxBtn = Instance.new("TextButton")
-hitboxBtn.Size = UDim2.new(0.9, 0, 0, 30)
-hitboxBtn.Position = UDim2.new(0.05, 0, 0, 40)
-hitboxBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-hitboxBtn.BorderSizePixel = 1
-hitboxBtn.BorderColor3 = Color3.fromRGB(100, 100, 100)
-hitboxBtn.Text = "Hitbox: OFF"
-hitboxBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-hitboxBtn.Font = Enum.Font.Code
-hitboxBtn.TextSize = 14
-hitboxBtn.Parent = menuFrame
+local function createButton(pos, text)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 30)
+    btn.Position = UDim2.new(0.05, 0, 0, pos)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Parent = menuFrame
+    return btn
+end
 
+local hitboxBtn = createButton(40, "هيتبوكس: إيقاف")
 local sizeInput = Instance.new("TextBox")
 sizeInput.Size = UDim2.new(0.9, 0, 0, 30)
 sizeInput.Position = UDim2.new(0.05, 0, 0, 80)
 sizeInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-sizeInput.BorderSizePixel = 1
-sizeInput.BorderColor3 = Color3.fromRGB(100, 100, 100)
 sizeInput.Text = "20"
-sizeInput.PlaceholderText = "Hitbox Size"
 sizeInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-sizeInput.Font = Enum.Font.Code
-sizeInput.TextSize = 14
-sizeInput.ClearTextOnFocus = false
 sizeInput.Parent = menuFrame
 
-local deadlyBtn = Instance.new("TextButton")
-deadlyBtn.Size = UDim2.new(0.9, 0, 0, 30)
-deadlyBtn.Position = UDim2.new(0.05, 0, 0, 120)
-deadlyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-deadlyBtn.BorderSizePixel = 1
-deadlyBtn.BorderColor3 = Color3.fromRGB(100, 100, 100)
-deadlyBtn.Text = "Deadly Bullet: OFF"
-deadlyBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-deadlyBtn.Font = Enum.Font.Code
-deadlyBtn.TextSize = 14
-deadlyBtn.Parent = menuFrame
+local deadlyBtn = createButton(120, "رصاصة قاتلة: إيقاف")
+local noclipBtn = createButton(160, "اختراق الجدران: إيقاف")
+local invisibleBtn = createButton(200, "الاختفاء: إيقاف")
+local ghostBtn = createButton(240, "وضع الشبح: إيقاف")
+local godBtn = createButton(280, "الخلود: إيقاف")
 
-local noclipBtn = Instance.new("TextButton")
-noclipBtn.Size = UDim2.new(0.9, 0, 0, 30)
-noclipBtn.Position = UDim2.new(0.05, 0, 0, 160)
-noclipBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-noclipBtn.BorderSizePixel = 1
-noclipBtn.BorderColor3 = Color3.fromRGB(100, 100, 100)
-noclipBtn.Text = "Noclip: OFF"
-noclipBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-noclipBtn.Font = Enum.Font.Code
-noclipBtn.TextSize = 14
-noclipBtn.Parent = menuFrame
+local dragging, dragStartPos, dragStartMouse, hasDragged = false, nil, nil, false
+local titleDragging, titleDragStartPos, titleDragStartMouse, titleHasDragged = false, nil, nil, false
+
+iconBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+       or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        hasDragged = false
+        dragStartPos = iconBtn.Position
+        dragStartMouse = input.Position
+    end
+end)
+
+iconBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+       or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+        task.delay(0.1, function() hasDragged = false end)
+    end
+end)
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+       or input.UserInputType == Enum.UserInputType.Touch then
+        titleDragging = true
+        titleHasDragged = false
+        titleDragStartPos = menuFrame.Position
+        titleDragStartMouse = input.Position
+    end
+end)
+
+title.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+       or input.UserInputType == Enum.UserInputType.Touch then
+        titleDragging = false
+        task.delay(0.1, function() titleHasDragged = false end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType ~= Enum.UserInputType.MouseMovement
+       and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    if dragging then
+        local delta = input.Position - dragStartMouse
+        if delta.Magnitude > 5 then hasDragged = true end
+        iconBtn.Position = UDim2.new(
+            dragStartPos.X.Scale, dragStartPos.X.Offset + delta.X,
+            dragStartPos.Y.Scale, dragStartPos.Y.Offset + delta.Y)
+    elseif titleDragging then
+        local delta = input.Position - titleDragStartMouse
+        if delta.Magnitude > 5 then titleHasDragged = true end
+        menuFrame.Position = UDim2.new(
+            titleDragStartPos.X.Scale, titleDragStartPos.X.Offset + delta.X,
+            titleDragStartPos.Y.Scale, titleDragStartPos.Y.Offset + delta.Y)
+    end
+end)
 
 iconBtn.MouseButton1Click:Connect(function()
     if not hasDragged then
@@ -145,46 +144,43 @@ iconBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-closeBtn.MouseButton1Click:Connect(function()
-    menuFrame.Visible = false
-end)
+closeBtn.MouseButton1Click:Connect(function() menuFrame.Visible = false end)
 
 local hitboxSize = 20
 local hitboxEnabled = false
 local deadlyEnabled = false
 local noclipEnabled = false
+local invisibleEnabled = false
+local ghostEnabled = false
+local godModeEnabled = false
 
 sizeInput.FocusLost:Connect(function()
     local num = tonumber(sizeInput.Text)
     if num then
         hitboxSize = math.clamp(num, 2, 200)
         sizeInput.Text = tostring(hitboxSize)
-    else
-        sizeInput.Text = tostring(hitboxSize)
     end
 end)
 
-local function enforceFeatures()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.Massless = true
-                hrp.CanCollide = false
-                
-                if deadlyEnabled then
-                    hrp.Size = Vector3.new(6, 6, 6) 
-                    hrp.Transparency = 1
-                    hrp.CFrame = Camera.CFrame * CFrame.new(0, 0, -12) 
-                elseif hitboxEnabled then
-                    if hrp.Size.X ~= hitboxSize then
+RunService.RenderStepped:Connect(function()
+    local char = LocalPlayer.Character
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+
+    if deadlyEnabled or hitboxEnabled then
+        local camCF = Camera.CFrame
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    if deadlyEnabled then
+                        hrp.Size = Vector3.new(6, 6, 6)
+                        hrp.Transparency = 1
+                        hrp.CFrame = camCF * CFrame.new(0, 0, -12)
+                    elseif hitboxEnabled then
                         hrp.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
                         hrp.Transparency = 0.7
                         hrp.BrickColor = BrickColor.new("White")
-                        hrp.Material = Enum.Material.SmoothPlastic
-                    end
-                else
-                    if hrp.Size.X ~= 2 then
+                    else
                         hrp.Size = Vector3.new(2, 2, 1)
                         hrp.Transparency = 1
                     end
@@ -192,60 +188,118 @@ local function enforceFeatures()
             end
         end
     end
-    
-    if noclipEnabled and LocalPlayer.Character then
-        for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
+
+    if noclipEnabled then
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+            if hrp and humanoid and humanoid.Health > 0 then
+                local bounds = Workspace:GetPartBoundsInBox(hrp.CFrame, hrp.Size)
+                for _, wall in ipairs(bounds) do
+                    local wallTop = wall.Position.Y + wall.Size.Y / 2
+                    local hrpBottom = hrp.Position.Y - hrp.Size.Y / 2
+                    if hrpBottom >= wallTop - 0.5 then
+                        -- player is standing on this part: ground, skip
+                    else
+                        if wall.CanCollide and wall.Anchored and not wall:IsDescendantOf(char) then
+                            wall.CanCollide = false
+                        end
+                    end
+                end
+            end
+        end
+    elseif char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" and not part.CanCollide then
+                part.CanCollide = true
             end
         end
     end
-end
 
-local function toggleHitbox()
+    if invisibleEnabled and char then
+        for _, desc in ipairs(char:GetDescendants()) do
+            if desc:IsA("BasePart") and desc ~= char:FindFirstChild("HumanoidRootPart") then
+                desc.Transparency = 1
+            elseif desc:IsA("Decal") or desc:IsA("Texture") then
+                desc.Transparency = 1
+            elseif desc:IsA("SpecialMesh") then
+                desc.TextureTransparency = 1
+            end
+        end
+    elseif char then
+        for _, desc in ipairs(char:GetDescendants()) do
+            if desc:IsA("BasePart") then
+                desc.Transparency = 0
+            elseif desc:IsA("Decal") or desc:IsA("Texture") then
+                desc.Transparency = 0
+            elseif desc:IsA("SpecialMesh") then
+                desc.TextureTransparency = 0
+            end
+        end
+    end
+
+    if godModeEnabled and humanoid then
+        pcall(function()
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        end)
+        humanoid.MaxHealth = 999999
+        humanoid.Health = 999999
+    end
+
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then hrp.Anchored = ghostEnabled end
+    end
+end)
+
+hitboxBtn.MouseButton1Click:Connect(function()
     hitboxEnabled = not hitboxEnabled
     if hitboxEnabled then
-        hitboxBtn.Text = "Hitbox: ON"
-        hitboxBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
         deadlyEnabled = false
-        deadlyBtn.Text = "Deadly Bullet: OFF"
+        deadlyBtn.Text = "رصاصة قاتلة: إيقاف"
         deadlyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        deadlyBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-    else
-        hitboxBtn.Text = "Hitbox: OFF"
-        hitboxBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     end
-end
+    hitboxBtn.Text = hitboxEnabled and "هيتبوكس: تشغيل" or "هيتبوكس: إيقاف"
+    hitboxBtn.BackgroundColor3 = hitboxEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(50, 50, 50)
+end)
 
-local function toggleDeadly()
+deadlyBtn.MouseButton1Click:Connect(function()
     deadlyEnabled = not deadlyEnabled
     if deadlyEnabled then
-        deadlyBtn.Text = "Deadly Bullet: ON"
-        deadlyBtn.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-        deadlyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         hitboxEnabled = false
-        hitboxBtn.Text = "Hitbox: OFF"
+        hitboxBtn.Text = "هيتبوكس: إيقاف"
         hitboxBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    else
-        deadlyBtn.Text = "Deadly Bullet: OFF"
-        deadlyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        deadlyBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
     end
-end
+    deadlyBtn.Text = deadlyEnabled and "رصاصة قاتلة: تشغيل" or "رصاصة قاتلة: إيقاف"
+    deadlyBtn.BackgroundColor3 = deadlyEnabled and Color3.fromRGB(150, 50, 50) or Color3.fromRGB(50, 50, 50)
+end)
 
-local function toggleNoclip()
+noclipBtn.MouseButton1Click:Connect(function()
     noclipEnabled = not noclipEnabled
-    if noclipEnabled then
-        noclipBtn.Text = "Noclip: ON"
-        noclipBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-    else
-        noclipBtn.Text = "Noclip: OFF"
-        noclipBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    end
-end
+    noclipBtn.Text = noclipEnabled and "اختراق الجدران: تشغيل" or "اختراق الجدران: إيقاف"
+    noclipBtn.BackgroundColor3 = noclipEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(50, 50, 50)
+end)
 
-hitboxBtn.MouseButton1Click:Connect(toggleHitbox)
-deadlyBtn.MouseButton1Click:Connect(toggleDeadly)
-noclipBtn.MouseButton1Click:Connect(toggleNoclip)
+invisibleBtn.MouseButton1Click:Connect(function()
+    invisibleEnabled = not invisibleEnabled
+    invisibleBtn.Text = invisibleEnabled and "الاختفاء: تشغيل" or "الاختفاء: إيقاف"
+    invisibleBtn.BackgroundColor3 = invisibleEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(50, 50, 50)
+end)
 
-RunService.RenderStepped:Connect(enforceFeatures)
+ghostBtn.MouseButton1Click:Connect(function()
+    ghostEnabled = not ghostEnabled
+    ghostBtn.Text = ghostEnabled and "وضع الشبح: تشغيل" or "وضع الشبح: إيقاف"
+    ghostBtn.BackgroundColor3 = ghostEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(50, 50, 50)
+end)
+
+godBtn.MouseButton1Click:Connect(function()
+    godModeEnabled = not godModeEnabled
+    godBtn.Text = godModeEnabled and "الخلود: تشغيل" or "الخلود: إيقاف"
+    godBtn.BackgroundColor3 = godModeEnabled and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(50, 50, 50)
+end)
+
