@@ -9,6 +9,21 @@ local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
+local Safe = {
+    gethui = type(gethui) == "function" and gethui or nil,
+    newcclosure = type(newcclosure) == "function" and newcclosure or function(f) return f end,
+    checkcaller = type(checkcaller) == "function" and checkcaller or function() return true end,
+    getnamecallmethod = type(getnamecallmethod) == "function" and getnamecallmethod or function() return nil end,
+    getrawmetatable = type(getrawmetatable) == "function" and getrawmetatable or nil,
+    setreadonly = type(setreadonly) == "function" and setreadonly or function() end,
+    writefile = type(writefile) == "function" and writefile or nil,
+    readfile = type(readfile) == "function" and readfile or nil,
+    isfile = type(isfile) == "function" and isfile or nil,
+    setclipboard = type(setclipboard) == "function" and setclipboard or nil,
+    http_request = type(http_request) == "function" and http_request or nil,
+    isexecutorclosure = type(isexecutorclosure) == "function" and isexecutorclosure or function() return true end
+}
+
 local INSPECTOR_SETTINGS = {
     MaxLogs = 150,
     MaxDepth = 5,
@@ -54,15 +69,19 @@ end
 local gui = Instance.new("ScreenGui")
 gui.Name = "RE_Ultimate_Framework"
 gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.DisplayOrder = 999
 
-pcall(function()
-    if gethui then
-        gui.Parent = gethui()
+local parentOk, parentErr = pcall(function()
+    if Safe.gethui then
+        gui.Parent = Safe.gethui()
     else
         gui.Parent = CoreGui
     end
 end)
-if gui.Parent == nil then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+if gui.Parent == nil or gui.Parent == script then
+    pcall(function() gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
+end
 
 local iconBtn = Instance.new("TextButton")
 iconBtn.Size = UDim2.new(0, 40, 0, 40)
@@ -84,7 +103,7 @@ menuFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 menuFrame.BorderSizePixel = 1
 menuFrame.BorderColor3 = Color3.fromRGB(80, 80, 80)
 menuFrame.Visible = false
-menuFrame.Active = false 
+menuFrame.Active = false
 menuFrame.Parent = gui
 
 local title = Instance.new("TextLabel")
@@ -96,7 +115,7 @@ title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.Code
 title.TextSize = 13
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.Active = true 
+title.Active = true
 title.Parent = menuFrame
 makeDraggable(title, menuFrame)
 
@@ -151,7 +170,7 @@ inspectorFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 inspectorFrame.BorderSizePixel = 1
 inspectorFrame.BorderColor3 = Color3.fromRGB(100, 150, 255)
 inspectorFrame.Visible = false
-inspectorFrame.Active = false 
+inspectorFrame.Active = false
 inspectorFrame.Parent = gui
 
 local inspectorTitle = Instance.new("TextLabel")
@@ -241,10 +260,10 @@ end
 local function parseData(data, depth, seen)
     depth = depth or 1
     seen = seen or {}
-    
+
     local t = typeof(data)
     if depth > INSPECTOR_SETTINGS.MaxDepth then return "{Max Depth}" end
-    
+
     if t == "table" then
         if seen[data] then return "{Circular Ref}" end
         seen[data] = true
@@ -273,7 +292,7 @@ local function renderTree(data, parent, indentLevel, textStr)
         row.Font = Enum.Font.Code
         row.TextSize = 11
         row.TextXAlignment = Enum.TextXAlignment.Left
-        
+
         local indent = string.rep("  ", indentLevel)
         if type(v) == "table" then
             row.Text = indent .. "▼ [" .. tostring(k) .. "] Table"
@@ -297,7 +316,7 @@ local function drawLogUI(logData)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     btn.Text = ""
     btn.LayoutOrder = -logData.ID
-    
+
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -6, 1, 0)
     lbl.Position = UDim2.new(0, 3, 0, 0)
@@ -307,20 +326,20 @@ local function drawLogUI(logData)
     lbl.TextSize = 10
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = btn
-    
+
     local function updateText()
         local countStr = logData.Count > 1 and string.format(" <font color='rgb(255,100,100)'>x%d</font>", logData.Count) or ""
         local dirColor = logData.Direction == "Incoming ⬇️" and "rgb(100,255,100)" or "rgb(255,100,100)"
         local senderStr = logData.Sender == "Server" and "<font color='rgb(150,150,255)'>Server</font>" or string.format("<font color='rgb(255,200,100)'>%s</font>", logData.Sender)
-        
-        lbl.Text = string.format("<b>#%03d</b> %s%s\n<font color='%s'>%s</font> | %s\n<font color='rgb(150,150,150)'>%s | Sender: %s</font>", 
+
+        lbl.Text = string.format("<b>#%03d</b> %s%s\n<font color='%s'>%s</font> | %s\n<font color='rgb(150,150,150)'>%s | Sender: %s</font>",
             logData.ID, logData.Name, countStr, dirColor, logData.Direction, logData.Method, logData.Timestamp, senderStr)
     end
     updateText()
-    
+
     btn.MouseButton1Click:Connect(function()
         for _, c in ipairs(rightScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
-        
+
         local header = Instance.new("TextLabel")
         header.Size = UDim2.new(1, 0, 0, 75)
         header.BackgroundTransparency = 1
@@ -328,14 +347,14 @@ local function drawLogUI(logData)
         header.Font = Enum.Font.Code
         header.TextSize = 11
         header.TextColor3 = Color3.fromRGB(220, 220, 220)
-        header.Text = string.format("ID: #%03d\nRemote: %s\nClass: %s\nPath: %s\nDirection: %s\nSender: %s", 
+        header.Text = string.format("ID: #%03d\nRemote: %s\nClass: %s\nPath: %s\nDirection: %s\nSender: %s",
             logData.ID, logData.Name, logData.Class, logData.Path, logData.Direction, logData.Sender)
         header.Parent = rightScroll
-        
+
         activeTreeData = header.Text .. "\n\nArguments:\n"
         activeTreeData = renderTree(logData.Args, rightScroll, 0, activeTreeData)
     end)
-    
+
     btn.Parent = leftScroll
     logData.UI = btn
     logData.UpdateFunc = updateText
@@ -346,24 +365,27 @@ RunService.Heartbeat:Connect(function()
         local count = math.min(#logQueue, INSPECTOR_SETTINGS.LogsPerFrame)
         for i = 1, count do
             local newLog = table.remove(logQueue, 1)
-            
+
+            local skip = false
             if INSPECTOR_SETTINGS.Deduplicate and #logsDatabase > 0 then
                 local lastLog = logsDatabase[#logsDatabase]
                 if lastLog.Name == newLog.Name and lastLog.Method == newLog.Method and lastLog.Direction == newLog.Direction then
                     lastLog.Count = lastLog.Count + 1
                     lastLog.Timestamp = newLog.Timestamp
                     if lastLog.UpdateFunc then lastLog.UpdateFunc() end
-                    goto continue
+                    skip = true
                 end
             end
-            ::continue::
+            if skip then goto loopcontinue end
+
             table.insert(logsDatabase, newLog)
             drawLogUI(newLog)
-            
+
             if #logsDatabase > INSPECTOR_SETTINGS.MaxLogs then
                 local old = table.remove(logsDatabase, 1)
                 if old.UI then old.UI:Destroy() end
             end
+            ::loopcontinue::
         end
     end
 end)
@@ -381,15 +403,15 @@ clearSpyBtn.MouseButton1Click:Connect(function()
 end)
 
 copySelectedBtn.MouseButton1Click:Connect(function()
-    if activeTreeData ~= "" then pcall(function() setclipboard(activeTreeData) end) end
+    if activeTreeData ~= "" and Safe.setclipboard then pcall(function() Safe.setclipboard(activeTreeData) end) end
 end)
 
 copyAllBtn.MouseButton1Click:Connect(function()
     if #logsDatabase == 0 then return end
-    
+
     local allDataText = "=== سجل ريموتات اللعبة الكامل ===\n\n"
     for _, log in ipairs(logsDatabase) do
-        allDataText = allDataText .. string.format("[#%03d] [%s] %s (%s) | %s | المرسل: %s | التكرار: x%d\n", 
+        allDataText = allDataText .. string.format("[#%03d] [%s] %s (%s) | %s | المرسل: %s | التكرار: x%d\n",
             log.ID, log.Timestamp, log.Name, log.Method, log.Direction, log.Sender, log.Count)
         allDataText = allDataText .. "المسار: " .. log.Path .. "\n"
         local argsText = ""
@@ -407,13 +429,13 @@ copyAllBtn.MouseButton1Click:Connect(function()
         parseArgsToString(log.Args, 1)
         allDataText = allDataText .. "البيانات الممررة:\n" .. argsText .. "\n-------------------------\n"
     end
-    
-    if setclipboard then
-        pcall(function() setclipboard(allDataText) end)
+
+    if Safe.setclipboard then
+        pcall(function() Safe.setclipboard(allDataText) end)
         copyAllBtn.Text = "تم النسخ!"
         copyAllBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-        task.delay(1.5, function() 
-            copyAllBtn.Text = "نسخ الكل" 
+        task.delay(1.5, function()
+            copyAllBtn.Text = "نسخ الكل"
             copyAllBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
         end)
     else
@@ -433,7 +455,7 @@ local function setupRemoteListener(obj)
             obj.OnClientEvent:Connect(function(...)
                 if not spyRecording then return end
                 local args = {...}
-                
+
                 local sender = "Server"
                 for _, arg in pairs(args) do
                     if typeof(arg) == "Instance" and arg:IsA("Player") and arg ~= LocalPlayer then
@@ -472,79 +494,84 @@ game.DescendantAdded:Connect(function(obj)
 end)
 
 local rapidEnabled = false
+local hookInstalled = false
 
-local mt = getrawmetatable(game)
-local oldNamecall = mt.__namecall
-setreadonly(mt, false)
+if Safe.getrawmetatable and Safe.newcclosure and Safe.getnamecallmethod then
+    local mtOk, mt = pcall(function() return Safe.getrawmetatable(game) end)
+    if mtOk and mt then
+        local oldNamecall = mt.__namecall
 
-mt.__namecall = newcclosure(function(self, ...)
-    local args = {...}
-    local method = getnamecallmethod()
-    
-    if spyRecording and not checkcaller() and (method == "FireServer" or method == "InvokeServer") then
-        local sName, rName = pcall(function() return self.Name end)
-        local sClass, rClass = pcall(function() return self.ClassName end)
-        local sPath, rPath = pcall(function() return self:GetFullName() end)
-        
-        local remoteName = sName and rName or "Unknown"
-        local remoteClass = sClass and rClass or "Unknown"
-        local remotePath = sPath and rPath or "Unknown"
-        
-        local safeArgs = {}
-        for i, v in ipairs(args) do safeArgs[i] = v end
-        
-        task.defer(function()
-            logCounter = logCounter + 1
-            local parsed = parseData(safeArgs)
-            
-            table.insert(logQueue, {
-                ID = logCounter,
-                Name = remoteName,
-                Class = remoteClass,
-                Method = method,
-                Direction = "Outgoing ⬆️",
-                Sender = "You (" .. LocalPlayer.Name .. ")",
-                Path = remotePath,
-                Timestamp = formatTime(),
-                Args = parsed,
-                Count = 1
-            })
+        mt.__namecall = Safe.newcclosure(function(self, ...)
+            local args = {...}
+            local method = Safe.getnamecallmethod()
+
+            if spyRecording and Safe.checkcaller() == false and (method == "FireServer" or method == "InvokeServer") then
+                local sName, rName = pcall(function() return self.Name end)
+                local sClass, rClass = pcall(function() return self.ClassName end)
+                local sPath, rPath = pcall(function() return self:GetFullName() end)
+
+                local remoteName = sName and rName or "Unknown"
+                local remoteClass = sClass and rClass or "Unknown"
+                local remotePath = sPath and rPath or "Unknown"
+
+                local safeArgs = {}
+                for i, v in ipairs(args) do safeArgs[i] = v end
+
+                task.defer(function()
+                    logCounter = logCounter + 1
+                    local parsed = parseData(safeArgs)
+
+                    table.insert(logQueue, {
+                        ID = logCounter,
+                        Name = remoteName,
+                        Class = remoteClass,
+                        Method = method,
+                        Direction = "Outgoing ⬆️",
+                        Sender = "You (" .. LocalPlayer.Name .. ")",
+                        Path = remotePath,
+                        Timestamp = formatTime(),
+                        Args = parsed,
+                        Count = 1
+                    })
+                end)
+            end
+
+            if rapidEnabled and Safe.checkcaller() == false and method == "FireServer" and self.Name == "RequestActionSync" then
+                local target = nil
+                local shortestDist = math.huge
+
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                        local pos, onScreen = Camera:WorldToViewportPoint(p.Character.Head.Position)
+                        if onScreen then
+                            local dist = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(pos.X, pos.Y)).Magnitude
+                            if dist < shortestDist then target = p; shortestDist = dist end
+                        end
+                    end
+                end
+
+                if target then
+                    local head = target.Character.Head
+                    for i, v in pairs(args) do
+                        if type(v) == "table" and rawget(v, "hitPosition") ~= nil then
+                            v.hitInstance = head
+                            v.hitHumanoid = target.Character.Humanoid
+                            v.hitPosition = head.Position
+                            v.direction = (head.Position - (v.origin or head.Position)).Unit
+                            v.IsHeadshot = true
+                            args[i] = v
+                            return oldNamecall(self, unpack(args))
+                        end
+                    end
+                end
+            end
+
+            return oldNamecall(self, ...)
         end)
+        Safe.setreadonly(mt, true)
+        hookInstalled = true
     end
-    
-    if rapidEnabled and not checkcaller() and method == "FireServer" and self.Name == "RequestActionSync" then
-        local target = nil
-        local shortestDist = math.huge
-        
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-                local pos, onScreen = Camera:WorldToViewportPoint(p.Character.Head.Position)
-                if onScreen then
-                    local dist = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(pos.X, pos.Y)).Magnitude
-                    if dist < shortestDist then target = p; shortestDist = dist end
-                end
-            end
-        end
-        
-        if target then
-            local head = target.Character.Head
-            for i, v in pairs(args) do
-                if type(v) == "table" and rawget(v, "hitPosition") ~= nil then
-                    v.hitInstance = head
-                    v.hitHumanoid = target.Character.Humanoid
-                    v.hitPosition = head.Position
-                    v.direction = (head.Position - (v.origin or head.Position)).Unit
-                    v.IsHeadshot = true
-                    args[i] = v
-                    return oldNamecall(self, unpack(args))
-                end
-            end
-        end
-    end
-    
-    return oldNamecall(self, ...)
-end)
-setreadonly(mt, true)
+end
 
 local hitboxEnabled, deadlyEnabled, noclipEnabled, invisibleEnabled, ghostEnabled, godModeEnabled, espEnabled = false, false, false, false, false, false, false
 local hitboxSize = 20
@@ -564,7 +591,7 @@ local function toggleBtn(btn, stateVar)
         elseif btn == ghostBtn then ghostEnabled = not ghostEnabled stateVar = ghostEnabled
         elseif btn == godBtn then godModeEnabled = not godModeEnabled stateVar = godModeEnabled
         elseif btn == espBtn then espEnabled = not espEnabled stateVar = espEnabled end
-        
+
         btn.BackgroundColor3 = stateVar and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(40, 40, 45)
     end)
 end
@@ -588,10 +615,10 @@ RunService.RenderStepped:Connect(function()
                 local hrp = player.Character.HumanoidRootPart
                 hrp.CanCollide = false
                 hrp.Transparency = 0.3
-                if deadlyEnabled then 
+                if deadlyEnabled then
                     hrp.Size = Vector3.new(6, 6, 6); hrp.CFrame = Camera.CFrame * CFrame.new(0, 0, -12)
-                else 
-                    hrp.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize) 
+                else
+                    hrp.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
                 end
             end
         end
@@ -610,7 +637,7 @@ RunService.RenderStepped:Connect(function()
     end
 
     if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.Anchored = ghostEnabled end
-    
+
     if espEnabled then
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character and not player.Character:FindFirstChild("RE_HL") then
@@ -632,17 +659,17 @@ local function buildConsoleText()
     if #logsDatabase == 0 then
         return "لا توجد ريموتات مسجلة - فعّل زر التسجيل في Inspector وادخل اللعبة ثم ارمِ بالسلاح واجمع أكبر عدد من الريموتات"
     end
-    
+
     local out = "=== Roblox Remote Console Log ===\n"
     out = out .. "Game: " .. game.Name .. " | PlaceId: " .. tostring(game.PlaceId) .. "\n"
     out = out .. "Total remotes captured: " .. #logsDatabase .. "\n\n"
-    
+
     local seen = {}
     for _, log in ipairs(logsDatabase) do
         local key = log.Name .. "|" .. log.Method .. "|" .. log.Direction
         if not seen[key] then
             seen[key] = true
-            out = out .. string.format("[%s] %s (%s) | %s | Path: %s | Sender: %s | x%d\n", 
+            out = out .. string.format("[%s] %s (%s) | %s | Path: %s | Sender: %s | x%d\n",
                 log.Timestamp, log.Name, log.Method, log.Direction, log.Path, log.Sender, log.Count)
             if type(log.Args) == "table" then
                 local function writeArgs(data, indent)
@@ -675,8 +702,8 @@ local AI_SETTINGS = {
 }
 
 pcall(function()
-    if readfile and isfile and isfile(AI_SETTINGS.KEY_FILE) then
-        local k = readfile(AI_SETTINGS.KEY_FILE):match("%S+")
+    if Safe.readfile and Safe.isfile and Safe.isfile(AI_SETTINGS.KEY_FILE) then
+        local k = Safe.readfile(AI_SETTINGS.KEY_FILE):match("%S+")
         if k then AI_SETTINGS.API_KEY = k end
     end
 end)
@@ -684,7 +711,7 @@ end)
 local function saveApiKey(k)
     AI_SETTINGS.API_KEY = k
     pcall(function()
-        if writefile then writefile(AI_SETTINGS.KEY_FILE, k) end
+        if Safe.writefile then Safe.writefile(AI_SETTINGS.KEY_FILE, k) end
     end)
 end
 
@@ -981,42 +1008,44 @@ local function callOpenRouter(messages, callback)
             callback(false, "فشل تشفير الطلب: " .. tostring(result))
             return
         end
-        
+
         local resp = nil
-        if http_request then
-            local res = http_request({
-                Url = AI_SETTINGS.ENDPOINT,
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json",
-                    ["Authorization"] = "Bearer " .. AI_SETTINGS.API_KEY,
-                    ["HTTP-Referer"] = "https://openrouter.ai",
-                    ["X-Title"] = "RE Panel AI"
-                },
-                Body = result
-            })
-            resp = res and res.Body
-        else
-            local web = loadstring(game:HttpGet("https://raw.githubusercontent.com/ai-district/web/main/main.lua"))()
-            resp = web.request(AI_SETTINGS.ENDPOINT, "POST", {
-                ["Content-Type"] = "application/json",
-                ["Authorization"] = "Bearer " .. AI_SETTINGS.API_KEY
-            }, result)
-            resp = resp and resp.body
+        if Safe.http_request then
+            local res = pcall(function()
+                return Safe.http_request({
+                    Url = AI_SETTINGS.ENDPOINT,
+                    Method = "POST",
+                    Headers = {
+                        ["Content-Type"] = "application/json",
+                        ["Authorization"] = "Bearer " .. AI_SETTINGS.API_KEY,
+                        ["HTTP-Referer"] = "https://openrouter.ai",
+                        ["X-Title"] = "RE Panel AI"
+                    },
+                    Body = result
+                })
+            end)
+            if res then resp = res.Body end
         end
-        
+
         if not resp then
-            callback(false, "فشل الاتصال بـ OpenRouter - تحقق من الإنترنت أو جرب executor آخر")
+            pcall(function()
+                local raw = game:HttpGet(AI_SETTINGS.ENDPOINT, false)
+                resp = raw
+            end)
+        end
+
+        if not resp then
+            callback(false, "فشل الاتصال بـ OpenRouter - تحقق من الإنترنت أو جرب executor يدعم http_request")
             return
         end
-        
-        local data = HttpService:JSONDecode(resp)
-        if data and data.choices and #data.choices > 0 then
-            local content = data.choices[1].message.content
+
+        local decoded = pcall(function() return HttpService:JSONDecode(resp) end)
+        if decoded and resp.choices and #resp.choices > 0 then
+            local content = resp.choices[1].message.content
             local code = content:match("```lua%s*(.-)%s*```") or content:match("```\n?(.-)\n?```") or content
             callback(true, code, content)
         else
-            callback(false, data and data.error and (data.error.message or tostring(data.error)) or "رد فارغ من النموذج")
+            callback(false, "رد غير صالح أو فارغ من النموذج - جرب نموذج آخر")
         end
     end)
 end
@@ -1067,14 +1096,14 @@ local function runGeneration(messages, editMode)
     aiEditBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     aiStatus.Text = editMode and "جارٍ تطبيق التعديل..." or "جارٍ تحليل الكونسول وإرساله للذكاء الاصطناعي..."
     clearAiOutput()
-    
+
     callOpenRouter(messages, function(success, code, full)
         aiWorking = false
         aiGenerateBtn.Text = "توليد سكربت من الكونسول ⚡"
         aiGenerateBtn.BackgroundColor3 = Color3.fromRGB(90, 40, 170)
         aiCopyBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
         aiEditBtn.BackgroundColor3 = Color3.fromRGB(120, 80, 30)
-        
+
         if success then
             lastGeneratedScript = code
             lastFullResponse = full
@@ -1093,15 +1122,15 @@ aiGenerateBtn.MouseButton1Click:Connect(function()
         aiStatus.Text = "لا توجد ريموتات! فعّل التسجيل في Inspector وارمِ بالسلاح أولاً"
         return
     end
-    
+
     local consoleText = buildConsoleText()
     local userMsg = {role = "user", content = consoleText}
-    
+
     aiHistory = {
         {role = "system", content = AI_SYSTEM_PROMPT .. "\n" .. consoleText},
         userMsg
     }
-    
+
     runGeneration(aiHistory, false)
 end)
 
@@ -1110,8 +1139,8 @@ aiCopyBtn.MouseButton1Click:Connect(function()
         aiStatus.Text = "لا يوجد سكربت لنسخه - ولّد أولاً"
         return
     end
-    if setclipboard then
-        pcall(function() setclipboard(lastGeneratedScript) end)
+    if Safe.setclipboard then
+        pcall(function() Safe.setclipboard(lastGeneratedScript) end)
         aiStatus.Text = "تم نسخ السكربت الكامل للحافظة ✓"
         aiCopyBtn.Text = "تم النسخ!"
         task.delay(1.5, function() aiCopyBtn.Text = "نسخ الكامل" end)
@@ -1134,12 +1163,12 @@ end)
 aiEditSendBtn.MouseButton1Click:Connect(function()
     local edit = aiEditInput.Text:match("^%s*(.-)%s*$")
     if not edit or edit == "" then return end
-    
+
     aiEditInput.Text = ""
     aiEditScroll.Visible = false
-    
+
     table.insert(aiHistory, {role = "user", content = "التعديل المطلوب: " .. edit .. "\n\nأرسل السكربت الكامل المعدل داخل بلوك ```lua ... ``` بدون أي كلام خارجه."})
-    
+
     runGeneration(aiHistory, true)
 end)
 
@@ -1155,4 +1184,8 @@ aiRunBtn.MouseButton1Click:Connect(function()
         aiStatus.Text = "فشل التنفيذ: " .. tostring(err)
     end
 end)
+
+local hookInfo = hookInstalled and "ON" or "OFF"
+print("[RE Panel] Loaded. Outgoing hook: " .. hookInfo)
+print("[RE Panel] APIs: getrawmetatable=" .. tostring(Safe.getrawmetatable ~= nil) .. " newcclosure=" .. tostring(Safe.newcclosure ~= nil) .. " checkcaller=" .. tostring(Safe.checkcaller ~= nil))
 
