@@ -255,11 +255,11 @@ aiFrame.BorderSizePixel = 0
 aiFrame.Visible = false
 aiFrame.Parent = inspectorFrame
 
-local genBtn = createButton(aiFrame, 5, 5, 140, 26, "توليد سكربت من الكونسول ⚡")
+local genBtn = createButton(aiFrame, 5, 5, 130, 26, "توليد سكربت ⚡")
 genBtn.BackgroundColor3 = Color3.fromRGB(90, 30, 130)
-local copyFullAiBtn = createButton(aiFrame, 150, 5, 75, 26, "نسخ الكامل")
-copyFullAiBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
-local execAiBtn = createButton(aiFrame, 230, 5, 65, 26, "تنفيذ ✓")
+local copyScriptBtn = createButton(aiFrame, 140, 5, 95, 26, "نسخ السكربت 📋")
+copyScriptBtn.BackgroundColor3 = Color3.fromRGB(40, 130, 70)
+local execAiBtn = createButton(aiFrame, 240, 5, 55, 26, "تنفيذ ✓")
 execAiBtn.BackgroundColor3 = Color3.fromRGB(40, 90, 140)
 
 local editInput = Instance.new("TextBox")
@@ -621,9 +621,10 @@ local function callOpenRouter(userPromptText)
     appendAiOutput("جارٍ التوليد...", Color3.fromRGB(255, 255, 100))
 
     if #chatHistory == 0 then
+        -- 💡 تم تقوية وتحديث البرومبت ليكون أكثر دقة وصرامة
         table.insert(chatHistory, {
             role = "system",
-            content = "أنت أقوى مبرمج سكربتات Roblox Lua محترف. قم بتحليل كل Remote في السجل المرفق وافهم وظيفته بدقة (رمي، ضرر، حركة، تحميل، مال...). قم بتوليد سكربت Lua كامل loadstring-جاهز مع GUI مدمج وتفعيلات مستندة للريموتات الحية بالضبط (Aimbot على hitPosition/origin/direction، Rapid Fire على Remote الرمي، God Mode، Invisible، NoClip، ESP، Kill Aura، واستغلال أي Remote عالي القيمة). يجب أن ترد بالبايثون/لوا الكود داخل بلوك ```lua ... ``` فقط دون أي شرح إضافي خارجه."
+            content = "أنت 'RE-AI'، مساعد ذكاء اصطناعي فائق التطور ومتخصص حصرياً في برمجة وهندسة عكسية لسكربتات Roblox (Lua/Luau) وتطوير ثغرات الألعاب (Exploits). مهمتك هي تحليل سجلات الشبكة (RemoteEvents/RemoteFunctions) المقدمة لك، وكتابة سكربتات قوية، صامتة، ومحسنة لتنفيذ المطلوب باحترافية.\n\nشروط الاستجابة الصارمة:\n1. السكربت يجب أن يكون شغال 100% وخالي من أخطاء الـ Syntax.\n2. استخدم `pcall` أو `task.spawn` للحماية من الأخطاء العشوائية.\n3. اعتمد على المسارات الدقيقة الموجودة في الكونسول (استخدم `game:GetService` دائماً).\n4. لا تستخدم وظائف قديمة (Deprecated)، واعتمد على أفضل ممارسات Luau.\n5. إجابتك يجب أن تكون الكود البرمجي الصافي فقط لا غير، داخل بلوك ```lua ... ```. يمنع منعاً باتاً كتابة أي نص، شرح، أو مقدمة خارج البلوك البرمجي."
         })
     end
 
@@ -673,7 +674,7 @@ local function callOpenRouter(userPromptText)
                 local scriptMatch = string.match(replyContent, "```lua%s*(.-)%s*```") or string.match(replyContent, "```%s*(.-)%s*```") or replyContent
                 latestGeneratedScript = scriptMatch
 
-                appendAiOutput("تم التوليد بنجاح! السكربت جاهز.", Color3.fromRGB(100, 255, 100))
+                appendAiOutput("تم توليد وتحديث السكربت بنجاح (جاهز للنسخ والتنفيذ).", Color3.fromRGB(100, 255, 100))
                 for line in string.gmatch(scriptMatch, "[^\r\n]+") do
                     appendAiOutput(line, Color3.fromRGB(170, 220, 255))
                 end
@@ -705,11 +706,18 @@ sendEditBtn.MouseButton1Click:Connect(function()
     callOpenRouter(promptText)
 end)
 
-copyFullAiBtn.MouseButton1Click:Connect(function()
+copyScriptBtn.MouseButton1Click:Connect(function()
     if latestGeneratedScript ~= "" then
         Safe.setclipboard(latestGeneratedScript)
-        copyFullAiBtn.Text = "تم النسخ!"
-        task.delay(1.5, function() copyFullAiBtn.Text = "نسخ الكامل" end)
+        copyScriptBtn.Text = "تم النسخ ✓"
+        copyScriptBtn.BackgroundColor3 = Color3.fromRGB(30, 160, 80)
+        task.delay(1.5, function() 
+            copyScriptBtn.Text = "نسخ السكربت 📋" 
+            copyScriptBtn.BackgroundColor3 = Color3.fromRGB(40, 130, 70)
+        end)
+    else
+        copyScriptBtn.Text = "لا يوجد سكربت!"
+        task.delay(1.5, function() copyScriptBtn.Text = "نسخ السكربت 📋" end)
     end
 end)
 
@@ -766,7 +774,10 @@ game.DescendantAdded:Connect(function(obj)
     setupRemoteListener(obj)
 end)
 
+-- المتغيرات العامة للأزرار
 local rapidEnabled = false
+local hitboxEnabled, deadlyEnabled, noclipEnabled, invisibleEnabled, ghostEnabled, godModeEnabled, espEnabled = false, false, false, false, false, false, false
+local hitboxSize = 20
 
 pcall(function()
     local mt = Safe.getrawmetatable(game)
@@ -845,38 +856,37 @@ pcall(function()
     end
 end)
 
-local hitboxEnabled, deadlyEnabled, noclipEnabled, invisibleEnabled, ghostEnabled, godModeEnabled, espEnabled = false, false, false, false, false, false, false
-local hitboxSize = 20
-
 sizeInput.FocusLost:Connect(function()
     local num = tonumber(sizeInput.Text)
     if num then hitboxSize = math.clamp(num, 2, 200); sizeInput.Text = tostring(hitboxSize) end
 end)
 
-local function toggleBtn(btn, stateVar, textOn, textOff)
+-- 💡 تم تصحيح دالة الأزرار لتقوم بتحديث المتغيرات العامة (Global) بشكل مباشر وصحيح
+local function toggleBtn(btn, textOn, textOff)
     btn.MouseButton1Click:Connect(function()
-        if btn == rapidBtn then rapidEnabled = not rapidEnabled stateVar = rapidEnabled
-        elseif btn == hitboxBtn then hitboxEnabled = not hitboxEnabled stateVar = hitboxEnabled
-        elseif btn == deadlyBtn then deadlyEnabled = not deadlyEnabled stateVar = deadlyEnabled
-        elseif btn == noclipBtn then noclipEnabled = not noclipEnabled stateVar = noclipEnabled
-        elseif btn == invisibleBtn then invisibleEnabled = not invisibleEnabled stateVar = invisibleEnabled
-        elseif btn == ghostBtn then ghostEnabled = not ghostEnabled stateVar = ghostEnabled
-        elseif btn == godBtn then godModeEnabled = not godModeEnabled stateVar = godModeEnabled
-        elseif btn == espBtn then espEnabled = not espEnabled stateVar = espEnabled end
+        local currentState = false
+        if btn == rapidBtn then rapidEnabled = not rapidEnabled; currentState = rapidEnabled
+        elseif btn == hitboxBtn then hitboxEnabled = not hitboxEnabled; currentState = hitboxEnabled
+        elseif btn == deadlyBtn then deadlyEnabled = not deadlyEnabled; currentState = deadlyEnabled
+        elseif btn == noclipBtn then noclipEnabled = not noclipEnabled; currentState = noclipEnabled
+        elseif btn == invisibleBtn then invisibleEnabled = not invisibleEnabled; currentState = invisibleEnabled
+        elseif btn == ghostBtn then ghostEnabled = not ghostEnabled; currentState = ghostEnabled
+        elseif btn == godBtn then godModeEnabled = not godModeEnabled; currentState = godModeEnabled
+        elseif btn == espBtn then espEnabled = not espEnabled; currentState = espEnabled end
         
-        btn.BackgroundColor3 = stateVar and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(40, 40, 45)
-        btn.Text = stateVar and textOn or textOff
+        btn.BackgroundColor3 = currentState and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(40, 40, 45)
+        btn.Text = currentState and textOn or textOff
     end)
 end
 
-toggleBtn(hitboxBtn, hitboxEnabled, "هيتبوكس: تشغيل", "هيتبوكس: إيقاف")
-toggleBtn(deadlyBtn, deadlyEnabled, "رصاصة قاتلة: تشغيل", "رصاصة قاتلة: إيقاف")
-toggleBtn(rapidBtn, rapidEnabled, "الطلق السحري: تشغيل", "الطلق السحري: إيقاف")
-toggleBtn(noclipBtn, noclipEnabled, "اختراق الجدران: تشغيل", "اختراق الجدران: إيقاف")
-toggleBtn(invisibleBtn, invisibleEnabled, "الاختفاء: تشغيل", "الاختفاء: إيقاف")
-toggleBtn(ghostBtn, ghostEnabled, "وضع الشبح: تشغيل", "وضع الشبح: إيقاف")
-toggleBtn(godBtn, godModeEnabled, "الخلود: تشغيل", "الخلود: إيقاف")
-toggleBtn(espBtn, espEnabled, "كشف الأماكن: تشغيل", "كشف الأماكن: إيقاف")
+toggleBtn(hitboxBtn, "هيتبوكس: تشغيل", "هيتبوكس: إيقاف")
+toggleBtn(deadlyBtn, "رصاصة قاتلة: تشغيل", "رصاصة قاتلة: إيقاف")
+toggleBtn(rapidBtn, "الطلق السحري: تشغيل", "الطلق السحري: إيقاف")
+toggleBtn(noclipBtn, "اختراق الجدران: تشغيل", "اختراق الجدران: إيقاف")
+toggleBtn(invisibleBtn, "الاختفاء: تشغيل", "الاختفاء: إيقاف")
+toggleBtn(ghostBtn, "وضع الشبح: تشغيل", "وضع الشبح: إيقاف")
+toggleBtn(godBtn, "الخلود: تشغيل", "الخلود: إيقاف")
+toggleBtn(espBtn, "كشف الأماكن: تشغيل", "كشف الأماكن: إيقاف")
 
 RunService.RenderStepped:Connect(function()
     local char = LocalPlayer.Character
