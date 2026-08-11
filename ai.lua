@@ -621,10 +621,9 @@ local function callOpenRouter(userPromptText)
     appendAiOutput("جارٍ التوليد...", Color3.fromRGB(255, 255, 100))
 
     if #chatHistory == 0 then
-        -- 💡 تم تقوية وتحديث البرومبت ليكون أكثر دقة وصرامة
         table.insert(chatHistory, {
-    role = "system",
-    content = [[أنت مهندس Luau خبير في Roblox. مهمتك توليد سكربتات تنفيذية احترافية، آمنة، ومستقرة.
+            role = "system",
+            content = [[أنت مهندس Luau خبير في Roblox. مهمتك توليد سكربتات تنفيذية احترافية، آمنة، ومستقرة.
 القواعد الملزمة:
 1. الهيكلة: استخدم نظاماً معيارياً (Modular) مفصولاً (UI, Logic, Utilities). ابنِ السكربت كمنظومة كاملة قابلة للتوسع والصيانة.
 2. البرمجة الدفاعية: لا تستخدم FindFirstChild لمسار كامل (مثل "a.b.c"). حلّل المسار جزءاً جزءاً عبر for i = 1, #parts do. تحقق دائماً من وجود الـ Instance والـ ClassName قبل الاستخدام.
@@ -632,9 +631,7 @@ local function callOpenRouter(userPromptText)
 4. الاستقرار والأداء: استخدم pcall للعمليات الخطرة. لا تستخدم Infinite Yield. نظّم الـ Connections والـ Loops، وأعد ربط المراجع عند الـ Respawn، ونظّف الـ Connections عند إيقاف التفعيلة.
 5. الأسلوب: ممنوع نهائياً كتابة أي تعليقات (مثل --) داخل الكود. التفعيلات يجب أن تكون قوية، خبيثة، ومؤثرة (مسموح بالضرر).
 6. المخرج: كود Lua صافٍ فقط داخل بلوك ```lua ... ``` بدون أي نص أو شرح خارجه.]]
-})
-
-
+        })
     end
 
     table.insert(chatHistory, {
@@ -829,7 +826,9 @@ pcall(function()
                 end)
             end
             
-            if rapidEnabled and not Safe.checkcaller() and method == "FireServer" and (sName and rName == "RequestActionSync" or self.Name == "RequestActionSync") then
+            -- تم تصحيح الفحص هنا وإصلاح المشكلة البرمجية بأمان تام
+            local successRN, remoteNameVal = pcall(function() return self.Name end)
+            if rapidEnabled and not Safe.checkcaller() and method == "FireServer" and successRN and remoteNameVal == "RequestActionSync" then
                 local target = nil
                 local shortestDist = math.huge
                 
@@ -870,7 +869,6 @@ sizeInput.FocusLost:Connect(function()
     if num then hitboxSize = math.clamp(num, 2, 200); sizeInput.Text = tostring(hitboxSize) end
 end)
 
--- 💡 تم تصحيح دالة الأزرار لتقوم بتحديث المتغيرات العامة (Global) بشكل مباشر وصحيح
 local function toggleBtn(btn, textOn, textOff)
     btn.MouseButton1Click:Connect(function()
         local currentState = false
