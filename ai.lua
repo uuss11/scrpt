@@ -4,24 +4,31 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
 
 local Safe = {
-    gethui = type(gethui) == "function" and gethui or nil,
-    newcclosure = type(newcclosure) == "function" and newcclosure or function(f) return f end,
-    checkcaller = type(checkcaller) == "function" and checkcaller or function() return true end,
-    getnamecallmethod = type(getnamecallmethod) == "function" and getnamecallmethod or function() return nil end,
-    getrawmetatable = type(getrawmetatable) == "function" and getrawmetatable or nil,
-    setreadonly = type(setreadonly) == "function" and setreadonly or function() end,
-    writefile = type(writefile) == "function" and writefile or nil,
-    readfile = type(readfile) == "function" and readfile or nil,
-    isfile = type(isfile) == "function" and isfile or nil,
-    setclipboard = type(setclipboard) == "function" and setclipboard or nil,
-    http_request = type(http_request) == "function" and http_request or nil,
-    isexecutorclosure = type(isexecutorclosure) == "function" and isexecutorclosure or function() return true end
+    getrawmetatable = function(...) local s, r = pcall(getrawmetatable, ...) return s and r or nil end,
+    newcclosure = function(...) local s, r = pcall(newcclosure, ...) return s and r or (function(...) return ... end) end,
+    checkcaller = function(...) local s, r = pcall(checkcaller, ...) return s and r or false end,
+    getnamecallmethod = function(...) local s, r = pcall(getnamecallmethod, ...) return s and r or "" end,
+    setreadonly = function(...) local s, r = pcall(setreadonly, ...) return s and r or nil end,
+    writefile = function(...) local s, r = pcall(writefile, ...) return s and r or nil end,
+    readfile = function(...) local s, r = pcall(readfile, ...) return s and r or nil end,
+    isfile = function(...) local s, r = pcall(isfile, ...) return s and r or false end,
+    setclipboard = function(...) local s, r = pcall(setclipboard, ...) return s and r or nil end,
+    gethui = function(...) local s, r = pcall(gethui, ...) return s and r or nil end,
+    http_request = function(...) 
+        local f = http_request or request or (syn and syn.request) or (http and http.request)
+        if f then
+            local s, r = pcall(f, ...)
+            return s and r or nil
+        end
+        return nil
+    end
 }
 
 local INSPECTOR_SETTINGS = {
@@ -72,16 +79,15 @@ gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.DisplayOrder = 999
 
-local parentOk, parentErr = pcall(function()
-    if Safe.gethui then
-        gui.Parent = Safe.gethui()
+pcall(function()
+    local hui = Safe.gethui()
+    if hui then
+        gui.Parent = hui
     else
         gui.Parent = CoreGui
     end
 end)
-if gui.Parent == nil or gui.Parent == script then
-    pcall(function() gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
-end
+if gui.Parent == nil then gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local iconBtn = Instance.new("TextButton")
 iconBtn.Size = UDim2.new(0, 40, 0, 40)
@@ -103,7 +109,7 @@ menuFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 menuFrame.BorderSizePixel = 1
 menuFrame.BorderColor3 = Color3.fromRGB(80, 80, 80)
 menuFrame.Visible = false
-menuFrame.Active = false
+menuFrame.Active = false 
 menuFrame.Parent = gui
 
 local title = Instance.new("TextLabel")
@@ -115,7 +121,7 @@ title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.Code
 title.TextSize = 13
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.Active = true
+title.Active = true 
 title.Parent = menuFrame
 makeDraggable(title, menuFrame)
 
@@ -170,7 +176,7 @@ inspectorFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 inspectorFrame.BorderSizePixel = 1
 inspectorFrame.BorderColor3 = Color3.fromRGB(100, 150, 255)
 inspectorFrame.Visible = false
-inspectorFrame.Active = false
+inspectorFrame.Active = false 
 inspectorFrame.Parent = gui
 
 local inspectorTitle = Instance.new("TextLabel")
@@ -210,10 +216,10 @@ local copyAllBtn = createButton(toolbarFrame, 240, 0, 85, 28, "نسخ الكل")
 copyAllBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 local dedupBtn = createButton(toolbarFrame, 330, 0, 95, 28, "دمج التكرار: ON")
 dedupBtn.BackgroundColor3 = Color3.fromRGB(50, 100, 50)
-local openAIBtn = createButton(toolbarFrame, 430, 0, 85, 28, "AI 🤖")
-openAIBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 180)
-local changeModelBtn = createButton(toolbarFrame, 520, 0, 85, 28, "النموذج 🔧")
-changeModelBtn.BackgroundColor3 = Color3.fromRGB(100, 80, 30)
+local aiTabBtn = createButton(toolbarFrame, 430, 0, 55, 28, "AI 🤖")
+aiTabBtn.BackgroundColor3 = Color3.fromRGB(110, 50, 150)
+local modelTabBtn = createButton(toolbarFrame, 490, 0, 65, 28, "النموذج 🔧")
+modelTabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
 
 local leftScroll = Instance.new("ScrollingFrame")
 leftScroll.Size = UDim2.new(0, 250, 1, -70)
@@ -241,6 +247,144 @@ rightLayout.SortOrder = Enum.SortOrder.LayoutOrder
 rightLayout.Padding = UDim.new(0, 4)
 rightLayout.Parent = rightScroll
 
+local aiFrame = Instance.new("Frame")
+aiFrame.Size = UDim2.new(1, -265, 1, -70)
+aiFrame.Position = UDim2.new(0, 260, 0, 65)
+aiFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+aiFrame.BorderSizePixel = 0
+aiFrame.Visible = false
+aiFrame.Parent = inspectorFrame
+
+local genBtn = createButton(aiFrame, 5, 5, 140, 26, "توليد سكربت من الكونسول ⚡")
+genBtn.BackgroundColor3 = Color3.fromRGB(90, 30, 130)
+local copyFullAiBtn = createButton(aiFrame, 150, 5, 75, 26, "نسخ الكامل")
+copyFullAiBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+local execAiBtn = createButton(aiFrame, 230, 5, 65, 26, "تنفيذ ✓")
+execAiBtn.BackgroundColor3 = Color3.fromRGB(40, 90, 140)
+
+local editInput = Instance.new("TextBox")
+editInput.Size = UDim2.new(1, -305, 0, 26)
+editInput.Position = UDim2.new(0, 300, 0, 5)
+editInput.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+editInput.PlaceholderText = "اكتب تعديلك هنا..."
+editInput.Text = ""
+editInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+editInput.Font = Enum.Font.Code
+editInput.TextSize = 11
+editInput.Parent = aiFrame
+
+local sendEditBtn = createButton(aiFrame, 1, 35, 110, 26, "تعديل 📝")
+sendEditBtn.Position = UDim2.new(1, -112, 0, 35)
+sendEditBtn.BackgroundColor3 = Color3.fromRGB(180, 90, 20)
+
+local aiScroll = Instance.new("ScrollingFrame")
+aiScroll.Size = UDim2.new(1, -10, 1, -68)
+aiScroll.Position = UDim2.new(0, 5, 0, 65)
+aiScroll.BackgroundColor3 = Color3.fromRGB(10, 10, 13)
+aiScroll.BorderSizePixel = 0
+aiScroll.ScrollBarThickness = 3
+aiScroll.Parent = aiFrame
+
+local aiScrollLay = Instance.new("UIListLayout")
+aiScrollLay.SortOrder = Enum.SortOrder.LayoutOrder
+aiScrollLay.Padding = UDim.new(0, 2)
+aiScrollLay.Parent = aiScroll
+
+local modelFrame = Instance.new("Frame")
+modelFrame.Size = UDim2.new(0, 340, 0, 150)
+modelFrame.Position = UDim2.new(0.5, -170, 0.5, -75)
+modelFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+modelFrame.BorderSizePixel = 1
+modelFrame.BorderColor3 = Color3.fromRGB(100, 100, 150)
+modelFrame.Visible = false
+modelFrame.Active = true
+modelFrame.Parent = inspectorFrame
+
+local modelTitle = Instance.new("TextLabel")
+modelTitle.Size = UDim2.new(1, -30, 0, 26)
+modelTitle.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+modelTitle.BorderSizePixel = 0
+modelTitle.Text = "  إعدادات النموذج الذكي"
+modelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+modelTitle.Font = Enum.Font.Code
+modelTitle.TextSize = 12
+modelTitle.TextXAlignment = Enum.TextXAlignment.Left
+modelTitle.Parent = modelFrame
+makeDraggable(modelTitle, modelFrame)
+
+local modelCloseBtn = Instance.new("TextButton")
+modelCloseBtn.Size = UDim2.new(0, 30, 0, 26)
+modelCloseBtn.Position = UDim2.new(1, -30, 0, 0)
+modelCloseBtn.BackgroundTransparency = 1
+modelCloseBtn.Text = "X"
+modelCloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+modelCloseBtn.Font = Enum.Font.Code
+modelCloseBtn.TextSize = 14
+modelCloseBtn.Parent = modelFrame
+
+local apiKeyBox = Instance.new("TextBox")
+apiKeyBox.Size = UDim2.new(1, -20, 0, 30)
+apiKeyBox.Position = UDim2.new(0, 10, 0, 36)
+apiKeyBox.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+apiKeyBox.PlaceholderText = "API Key: sk-or-v1-... (يُحفظ تلقائياً)"
+apiKeyBox.Text = ""
+apiKeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+apiKeyBox.Font = Enum.Font.Code
+apiKeyBox.TextSize = 11
+apiKeyBox.Parent = modelFrame
+
+local modelNameBox = Instance.new("TextBox")
+modelNameBox.Size = UDim2.new(1, -20, 0, 30)
+modelNameBox.Position = UDim2.new(0, 10, 0, 74)
+modelNameBox.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+modelNameBox.PlaceholderText = "google/gemma-3-27b-it:free"
+modelNameBox.Text = "google/gemma-3-27b-it:free"
+modelNameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+modelNameBox.Font = Enum.Font.Code
+modelNameBox.TextSize = 11
+modelNameBox.Parent = modelFrame
+
+local applyModelBtn = createButton(modelFrame, 10, 112, 320, 30, "تطبيق")
+applyModelBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
+
+local savedApiKey = ""
+if Safe.isfile("re_ai_key.txt") then
+    local content = Safe.readfile("re_ai_key.txt")
+    if content and content ~= "" then
+        savedApiKey = content
+        apiKeyBox.Text = savedApiKey
+    end
+end
+
+apiKeyBox.FocusLost:Connect(function()
+    savedApiKey = apiKeyBox.Text
+    if savedApiKey ~= "" then
+        Safe.writefile("re_ai_key.txt", savedApiKey)
+    end
+end)
+
+applyModelBtn.MouseButton1Click:Connect(function()
+    savedApiKey = apiKeyBox.Text
+    if savedApiKey ~= "" then
+        Safe.writefile("re_ai_key.txt", savedApiKey)
+    end
+    modelFrame.Visible = false
+    inspectorTitle.Text = "  [RE] Inspector - AI Model: " .. modelNameBox.Text
+end)
+
+aiTabBtn.MouseButton1Click:Connect(function()
+    rightScroll.Visible = false
+    aiFrame.Visible = true
+end)
+
+modelTabBtn.MouseButton1Click:Connect(function()
+    modelFrame.Visible = not modelFrame.Visible
+end)
+
+modelCloseBtn.MouseButton1Click:Connect(function()
+    modelFrame.Visible = false
+end)
+
 iconBtn.MouseButton1Click:Connect(function() menuFrame.Visible = not menuFrame.Visible end)
 closeBtn.MouseButton1Click:Connect(function() menuFrame.Visible = false end)
 inspectorCloseBtn.MouseButton1Click:Connect(function() inspectorFrame.Visible = false end)
@@ -260,10 +404,10 @@ end
 local function parseData(data, depth, seen)
     depth = depth or 1
     seen = seen or {}
-
+    
     local t = typeof(data)
     if depth > INSPECTOR_SETTINGS.MaxDepth then return "{Max Depth}" end
-
+    
     if t == "table" then
         if seen[data] then return "{Circular Ref}" end
         seen[data] = true
@@ -292,7 +436,7 @@ local function renderTree(data, parent, indentLevel, textStr)
         row.Font = Enum.Font.Code
         row.TextSize = 11
         row.TextXAlignment = Enum.TextXAlignment.Left
-
+        
         local indent = string.rep("  ", indentLevel)
         if type(v) == "table" then
             row.Text = indent .. "▼ [" .. tostring(k) .. "] Table"
@@ -316,7 +460,7 @@ local function drawLogUI(logData)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
     btn.Text = ""
     btn.LayoutOrder = -logData.ID
-
+    
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -6, 1, 0)
     lbl.Position = UDim2.new(0, 3, 0, 0)
@@ -326,20 +470,22 @@ local function drawLogUI(logData)
     lbl.TextSize = 10
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.Parent = btn
-
+    
     local function updateText()
         local countStr = logData.Count > 1 and string.format(" <font color='rgb(255,100,100)'>x%d</font>", logData.Count) or ""
         local dirColor = logData.Direction == "Incoming ⬇️" and "rgb(100,255,100)" or "rgb(255,100,100)"
         local senderStr = logData.Sender == "Server" and "<font color='rgb(150,150,255)'>Server</font>" or string.format("<font color='rgb(255,200,100)'>%s</font>", logData.Sender)
-
-        lbl.Text = string.format("<b>#%03d</b> %s%s\n<font color='%s'>%s</font> | %s\n<font color='rgb(150,150,150)'>%s | Sender: %s</font>",
+        
+        lbl.Text = string.format("<b>#%03d</b> %s%s\n<font color='%s'>%s</font> | %s\n<font color='rgb(150,150,150)'>%s | Sender: %s</font>", 
             logData.ID, logData.Name, countStr, dirColor, logData.Direction, logData.Method, logData.Timestamp, senderStr)
     end
     updateText()
-
+    
     btn.MouseButton1Click:Connect(function()
+        rightScroll.Visible = true
+        aiFrame.Visible = false
         for _, c in ipairs(rightScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
-
+        
         local header = Instance.new("TextLabel")
         header.Size = UDim2.new(1, 0, 0, 75)
         header.BackgroundTransparency = 1
@@ -347,14 +493,14 @@ local function drawLogUI(logData)
         header.Font = Enum.Font.Code
         header.TextSize = 11
         header.TextColor3 = Color3.fromRGB(220, 220, 220)
-        header.Text = string.format("ID: #%03d\nRemote: %s\nClass: %s\nPath: %s\nDirection: %s\nSender: %s",
+        header.Text = string.format("ID: #%03d\nRemote: %s\nClass: %s\nPath: %s\nDirection: %s\nSender: %s", 
             logData.ID, logData.Name, logData.Class, logData.Path, logData.Direction, logData.Sender)
         header.Parent = rightScroll
-
+        
         activeTreeData = header.Text .. "\n\nArguments:\n"
         activeTreeData = renderTree(logData.Args, rightScroll, 0, activeTreeData)
     end)
-
+    
     btn.Parent = leftScroll
     logData.UI = btn
     logData.UpdateFunc = updateText
@@ -365,27 +511,24 @@ RunService.Heartbeat:Connect(function()
         local count = math.min(#logQueue, INSPECTOR_SETTINGS.LogsPerFrame)
         for i = 1, count do
             local newLog = table.remove(logQueue, 1)
-
-            local skip = false
+            
             if INSPECTOR_SETTINGS.Deduplicate and #logsDatabase > 0 then
                 local lastLog = logsDatabase[#logsDatabase]
                 if lastLog.Name == newLog.Name and lastLog.Method == newLog.Method and lastLog.Direction == newLog.Direction then
                     lastLog.Count = lastLog.Count + 1
                     lastLog.Timestamp = newLog.Timestamp
                     if lastLog.UpdateFunc then lastLog.UpdateFunc() end
-                    skip = true
+                    continue
                 end
             end
-            if skip then goto loopcontinue end
-
+            
             table.insert(logsDatabase, newLog)
             drawLogUI(newLog)
-
+            
             if #logsDatabase > INSPECTOR_SETTINGS.MaxLogs then
                 local old = table.remove(logsDatabase, 1)
                 if old.UI then old.UI:Destroy() end
             end
-            ::loopcontinue::
         end
     end
 end)
@@ -403,15 +546,15 @@ clearSpyBtn.MouseButton1Click:Connect(function()
 end)
 
 copySelectedBtn.MouseButton1Click:Connect(function()
-    if activeTreeData ~= "" and Safe.setclipboard then pcall(function() Safe.setclipboard(activeTreeData) end) end
+    if activeTreeData ~= "" then Safe.setclipboard(activeTreeData) end
 end)
 
 copyAllBtn.MouseButton1Click:Connect(function()
     if #logsDatabase == 0 then return end
-
+    
     local allDataText = "=== سجل ريموتات اللعبة الكامل ===\n\n"
     for _, log in ipairs(logsDatabase) do
-        allDataText = allDataText .. string.format("[#%03d] [%s] %s (%s) | %s | المرسل: %s | التكرار: x%d\n",
+        allDataText = allDataText .. string.format("[#%03d] [%s] %s (%s) | %s | المرسل: %s | التكرار: x%d\n", 
             log.ID, log.Timestamp, log.Name, log.Method, log.Direction, log.Sender, log.Count)
         allDataText = allDataText .. "المسار: " .. log.Path .. "\n"
         local argsText = ""
@@ -429,13 +572,13 @@ copyAllBtn.MouseButton1Click:Connect(function()
         parseArgsToString(log.Args, 1)
         allDataText = allDataText .. "البيانات الممررة:\n" .. argsText .. "\n-------------------------\n"
     end
-
+    
     if Safe.setclipboard then
-        pcall(function() Safe.setclipboard(allDataText) end)
+        Safe.setclipboard(allDataText)
         copyAllBtn.Text = "تم النسخ!"
         copyAllBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-        task.delay(1.5, function()
-            copyAllBtn.Text = "نسخ الكل"
+        task.delay(1.5, function() 
+            copyAllBtn.Text = "نسخ الكل" 
             copyAllBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
         end)
     else
@@ -449,13 +592,143 @@ dedupBtn.MouseButton1Click:Connect(function()
     dedupBtn.BackgroundColor3 = INSPECTOR_SETTINGS.Deduplicate and Color3.fromRGB(50, 100, 50) or Color3.fromRGB(100, 50, 50)
 end)
 
+local chatHistory = {}
+local latestGeneratedScript = ""
+
+local function appendAiOutput(text, color)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, 0, 0, 20)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Code
+    lbl.TextSize = 11
+    lbl.TextColor3 = color or Color3.fromRGB(200, 200, 200)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Text = text
+    lbl.Parent = aiScroll
+    aiScroll.CanvasSize = UDim2.new(0, 0, 0, aiScrollLay.AbsoluteContentSize.Y + 20)
+end
+
+local function callOpenRouter(userPromptText)
+    if savedApiKey == "" then
+        appendAiOutput("خطأ: مطلوب مفتاح API - افتح تبويبة النموذج 🔧 والصق مفتاح OpenRouter الخاص بك.", Color3.fromRGB(255, 50, 50))
+        return
+    end
+
+    genBtn.Active = false
+    sendEditBtn.Active = false
+    genBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    sendEditBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    appendAiOutput("جارٍ التوليد...", Color3.fromRGB(255, 255, 100))
+
+    if #chatHistory == 0 then
+        table.insert(chatHistory, {
+            role = "system",
+            content = "أنت أقوى مبرمج سكربتات Roblox Lua محترف. قم بتحليل كل Remote في السجل المرفق وافهم وظيفته بدقة (رمي، ضرر، حركة، تحميل، مال...). قم بتوليد سكربت Lua كامل loadstring-جاهز مع GUI مدمج وتفعيلات مستندة للريموتات الحية بالضبط (Aimbot على hitPosition/origin/direction، Rapid Fire على Remote الرمي، God Mode، Invisible، NoClip، ESP، Kill Aura، واستغلال أي Remote عالي القيمة). يجب أن ترد بالبايثون/لوا الكود داخل بلوك ```lua ... ``` فقط دون أي شرح إضافي خارجه."
+        })
+    end
+
+    table.insert(chatHistory, {
+        role = "user",
+        content = userPromptText
+    })
+
+    task.spawn(function()
+        local payloadData = {
+            model = modelNameBox.Text ~= "" and modelNameBox.Text or "google/gemma-3-27b-it:free",
+            messages = chatHistory,
+            max_tokens = 8000
+        }
+
+        local success, res = pcall(function()
+            return Safe.http_request({
+                Url = "https://openrouter.ai/api/v1/chat/completions",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["Authorization"] = "Bearer " .. savedApiKey,
+                    ["HTTP-Referer"] = "https://openrouter.ai",
+                    ["X-Title"] = "RE Panel AI"
+                },
+                Body = HttpService:JSONEncode(payloadData)
+            })
+        end)
+
+        genBtn.Active = true
+        sendEditBtn.Active = true
+        genBtn.BackgroundColor3 = Color3.fromRGB(90, 30, 130)
+        sendEditBtn.BackgroundColor3 = Color3.fromRGB(180, 90, 20)
+
+        if success and res and res.Body then
+            local decodeSuccess, decoded = pcall(function()
+                return HttpService:JSONDecode(res.Body)
+            end)
+
+            if decodeSuccess and decoded and decoded.choices and decoded.choices[1] then
+                local replyContent = decoded.choices[1].message.content
+                table.insert(chatHistory, {
+                    role = "assistant",
+                    content = replyContent
+                })
+
+                local scriptMatch = string.match(replyContent, "```lua%s*(.-)%s*```") or string.match(replyContent, "```%s*(.-)%s*```") or replyContent
+                latestGeneratedScript = scriptMatch
+
+                appendAiOutput("تم التوليد بنجاح! السكربت جاهز.", Color3.fromRGB(100, 255, 100))
+                for line in string.gmatch(scriptMatch, "[^\r\n]+") do
+                    appendAiOutput(line, Color3.fromRGB(170, 220, 255))
+                end
+            else
+                appendAiOutput("خطأ في تحليل رد الـ API.", Color3.fromRGB(255, 50, 50))
+            end
+        else
+            appendAiOutput("فشل الطلب إلى OpenRouter API.", Color3.fromRGB(255, 50, 50))
+        end
+    end)
+end
+
+genBtn.MouseButton1Click:Connect(function()
+    local consoleSummary = "=== معلومات اللعبة ===\n"
+    consoleSummary = consoleSummary .. string.format("PlaceId: %s | GameId: %s | اسم اللعبة: %s\n\n=== السجل المجمع للكونسول ===\n", tostring(game.PlaceId), tostring(game.GameId), tostring(game.Name))
+    
+    for _, log in ipairs(logsDatabase) do
+        consoleSummary = consoleSummary .. string.format("[%s] %s (%s) | %s | المرسل: %s | المسار: %s\n", 
+            log.Timestamp, log.Name, log.Method, log.Direction, log.Sender, log.Path)
+    end
+
+    callOpenRouter(consoleSummary)
+end)
+
+sendEditBtn.MouseButton1Click:Connect(function()
+    if editInput.Text == "" then return end
+    local promptText = editInput.Text
+    editInput.Text = ""
+    callOpenRouter(promptText)
+end)
+
+copyFullAiBtn.MouseButton1Click:Connect(function()
+    if latestGeneratedScript ~= "" then
+        Safe.setclipboard(latestGeneratedScript)
+        copyFullAiBtn.Text = "تم النسخ!"
+        task.delay(1.5, function() copyFullAiBtn.Text = "نسخ الكامل" end)
+    end
+end)
+
+execAiBtn.MouseButton1Click:Connect(function()
+    if latestGeneratedScript ~= "" then
+        pcall(function()
+            local fn = loadstring(latestGeneratedScript)
+            if fn then fn() end
+        end)
+    end
+end)
+
 local function setupRemoteListener(obj)
     if obj:IsA("RemoteEvent") then
         pcall(function()
             obj.OnClientEvent:Connect(function(...)
                 if not spyRecording then return end
                 local args = {...}
-
+                
                 local sender = "Server"
                 for _, arg in pairs(args) do
                     if typeof(arg) == "Instance" and arg:IsA("Player") and arg ~= LocalPlayer then
@@ -494,33 +767,33 @@ game.DescendantAdded:Connect(function(obj)
 end)
 
 local rapidEnabled = false
-local hookInstalled = false
 
-if Safe.getrawmetatable and Safe.newcclosure and Safe.getnamecallmethod then
-    local mtOk, mt = pcall(function() return Safe.getrawmetatable(game) end)
-    if mtOk and mt then
+pcall(function()
+    local mt = Safe.getrawmetatable(game)
+    if mt then
         local oldNamecall = mt.__namecall
+        Safe.setreadonly(mt, false)
 
         mt.__namecall = Safe.newcclosure(function(self, ...)
             local args = {...}
             local method = Safe.getnamecallmethod()
-
-            if spyRecording and Safe.checkcaller() == false and (method == "FireServer" or method == "InvokeServer") then
+            
+            if spyRecording and not Safe.checkcaller() and (method == "FireServer" or method == "InvokeServer") then
                 local sName, rName = pcall(function() return self.Name end)
                 local sClass, rClass = pcall(function() return self.ClassName end)
                 local sPath, rPath = pcall(function() return self:GetFullName() end)
-
+                
                 local remoteName = sName and rName or "Unknown"
                 local remoteClass = sClass and rClass or "Unknown"
                 local remotePath = sPath and rPath or "Unknown"
-
+                
                 local safeArgs = {}
                 for i, v in ipairs(args) do safeArgs[i] = v end
-
+                
                 task.defer(function()
                     logCounter = logCounter + 1
                     local parsed = parseData(safeArgs)
-
+                    
                     table.insert(logQueue, {
                         ID = logCounter,
                         Name = remoteName,
@@ -535,11 +808,11 @@ if Safe.getrawmetatable and Safe.newcclosure and Safe.getnamecallmethod then
                     })
                 end)
             end
-
-            if rapidEnabled and Safe.checkcaller() == false and method == "FireServer" and self.Name == "RequestActionSync" then
+            
+            if rapidEnabled and not Safe.checkcaller() and method == "FireServer" and (sName and rName == "RequestActionSync" or self.Name == "RequestActionSync") then
                 local target = nil
                 local shortestDist = math.huge
-
+                
                 for _, p in pairs(Players:GetPlayers()) do
                     if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
                         local pos, onScreen = Camera:WorldToViewportPoint(p.Character.Head.Position)
@@ -549,7 +822,7 @@ if Safe.getrawmetatable and Safe.newcclosure and Safe.getnamecallmethod then
                         end
                     end
                 end
-
+                
                 if target then
                     local head = target.Character.Head
                     for i, v in pairs(args) do
@@ -565,13 +838,12 @@ if Safe.getrawmetatable and Safe.newcclosure and Safe.getnamecallmethod then
                     end
                 end
             end
-
+            
             return oldNamecall(self, ...)
         end)
         Safe.setreadonly(mt, true)
-        hookInstalled = true
     end
-end
+end)
 
 local hitboxEnabled, deadlyEnabled, noclipEnabled, invisibleEnabled, ghostEnabled, godModeEnabled, espEnabled = false, false, false, false, false, false, false
 local hitboxSize = 20
@@ -581,7 +853,7 @@ sizeInput.FocusLost:Connect(function()
     if num then hitboxSize = math.clamp(num, 2, 200); sizeInput.Text = tostring(hitboxSize) end
 end)
 
-local function toggleBtn(btn, stateVar)
+local function toggleBtn(btn, stateVar, textOn, textOff)
     btn.MouseButton1Click:Connect(function()
         if btn == rapidBtn then rapidEnabled = not rapidEnabled stateVar = rapidEnabled
         elseif btn == hitboxBtn then hitboxEnabled = not hitboxEnabled stateVar = hitboxEnabled
@@ -591,19 +863,20 @@ local function toggleBtn(btn, stateVar)
         elseif btn == ghostBtn then ghostEnabled = not ghostEnabled stateVar = ghostEnabled
         elseif btn == godBtn then godModeEnabled = not godModeEnabled stateVar = godModeEnabled
         elseif btn == espBtn then espEnabled = not espEnabled stateVar = espEnabled end
-
+        
         btn.BackgroundColor3 = stateVar and Color3.fromRGB(50, 150, 50) or Color3.fromRGB(40, 40, 45)
+        btn.Text = stateVar and textOn or textOff
     end)
 end
 
-toggleBtn(hitboxBtn)
-toggleBtn(deadlyBtn)
-toggleBtn(rapidBtn)
-toggleBtn(noclipBtn)
-toggleBtn(invisibleBtn)
-toggleBtn(ghostBtn)
-toggleBtn(godBtn)
-toggleBtn(espBtn)
+toggleBtn(hitboxBtn, hitboxEnabled, "هيتبوكس: تشغيل", "هيتبوكس: إيقاف")
+toggleBtn(deadlyBtn, deadlyEnabled, "رصاصة قاتلة: تشغيل", "رصاصة قاتلة: إيقاف")
+toggleBtn(rapidBtn, rapidEnabled, "الطلق السحري: تشغيل", "الطلق السحري: إيقاف")
+toggleBtn(noclipBtn, noclipEnabled, "اختراق الجدران: تشغيل", "اختراق الجدران: إيقاف")
+toggleBtn(invisibleBtn, invisibleEnabled, "الاختفاء: تشغيل", "الاختفاء: إيقاف")
+toggleBtn(ghostBtn, ghostEnabled, "وضع الشبح: تشغيل", "وضع الشبح: إيقاف")
+toggleBtn(godBtn, godModeEnabled, "الخلود: تشغيل", "الخلود: إيقاف")
+toggleBtn(espBtn, espEnabled, "كشف الأماكن: تشغيل", "كشف الأماكن: إيقاف")
 
 RunService.RenderStepped:Connect(function()
     local char = LocalPlayer.Character
@@ -615,10 +888,10 @@ RunService.RenderStepped:Connect(function()
                 local hrp = player.Character.HumanoidRootPart
                 hrp.CanCollide = false
                 hrp.Transparency = 0.3
-                if deadlyEnabled then
+                if deadlyEnabled then 
                     hrp.Size = Vector3.new(6, 6, 6); hrp.CFrame = Camera.CFrame * CFrame.new(0, 0, -12)
-                else
-                    hrp.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+                else 
+                    hrp.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize) 
                 end
             end
         end
@@ -637,7 +910,7 @@ RunService.RenderStepped:Connect(function()
     end
 
     if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.Anchored = ghostEnabled end
-
+    
     if espEnabled then
         for _, player in ipairs(Players:GetPlayers()) do
             if player ~= LocalPlayer and player.Character and not player.Character:FindFirstChild("RE_HL") then
@@ -654,538 +927,4 @@ RunService.RenderStepped:Connect(function()
         end
     end
 end)
-
-local function buildConsoleText()
-    if #logsDatabase == 0 then
-        return "لا توجد ريموتات مسجلة - فعّل زر التسجيل في Inspector وادخل اللعبة ثم ارمِ بالسلاح واجمع أكبر عدد من الريموتات"
-    end
-
-    local out = "=== Roblox Remote Console Log ===\n"
-    out = out .. "Game: " .. game.Name .. " | PlaceId: " .. tostring(game.PlaceId) .. "\n"
-    out = out .. "Total remotes captured: " .. #logsDatabase .. "\n\n"
-
-    local seen = {}
-    for _, log in ipairs(logsDatabase) do
-        local key = log.Name .. "|" .. log.Method .. "|" .. log.Direction
-        if not seen[key] then
-            seen[key] = true
-            out = out .. string.format("[%s] %s (%s) | %s | Path: %s | Sender: %s | x%d\n",
-                log.Timestamp, log.Name, log.Method, log.Direction, log.Path, log.Sender, log.Count)
-            if type(log.Args) == "table" then
-                local function writeArgs(data, indent)
-                    if type(data) ~= "table" then
-                        out = out .. indent .. "args: " .. tostring(data) .. "\n"
-                        return
-                    end
-                    for k, v in pairs(data) do
-                        if type(v) == "table" then
-                            out = out .. indent .. "[" .. tostring(k) .. "] Table:\n"
-                            writeArgs(v, indent .. "    ")
-                        else
-                            out = out .. indent .. tostring(k) .. ": " .. tostring(v) .. "\n"
-                        end
-                    end
-                end
-                writeArgs(log.Args, "    ")
-            end
-            out = out .. "---\n"
-        end
-    end
-    return out
-end
-
-local AI_SETTINGS = {
-    API_KEY = "",
-    KEY_FILE = "re_ai_key.txt",
-    MODEL = "google/gemma-3-27b-it:free",
-    ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
-}
-
-pcall(function()
-    if Safe.readfile and Safe.isfile and Safe.isfile(AI_SETTINGS.KEY_FILE) then
-        local k = Safe.readfile(AI_SETTINGS.KEY_FILE):match("%S+")
-        if k then AI_SETTINGS.API_KEY = k end
-    end
-end)
-
-local function saveApiKey(k)
-    AI_SETTINGS.API_KEY = k
-    pcall(function()
-        if Safe.writefile then Safe.writefile(AI_SETTINGS.KEY_FILE, k) end
-    end)
-end
-
-local aiFrame = Instance.new("Frame")
-aiFrame.Size = UDim2.new(0, 620, 0, 360)
-aiFrame.Position = UDim2.new(0, 1030, 0, 15)
-aiFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-aiFrame.BorderSizePixel = 1
-aiFrame.BorderColor3 = Color3.fromRGB(150, 100, 255)
-aiFrame.Visible = false
-aiFrame.Active = false
-aiFrame.Parent = gui
-
-local aiTitle = Instance.new("TextLabel")
-aiTitle.Size = UDim2.new(1, -30, 0, 28)
-aiTitle.BackgroundColor3 = Color3.fromRGB(35, 28, 45)
-aiTitle.BorderSizePixel = 0
-aiTitle.Text = "  [RE] AI Script Generator - Model: " .. AI_SETTINGS.MODEL
-aiTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiTitle.Font = Enum.Font.Code
-aiTitle.TextSize = 12
-aiTitle.TextXAlignment = Enum.TextXAlignment.Left
-aiTitle.Active = true
-aiTitle.Parent = aiFrame
-makeDraggable(aiTitle, aiFrame)
-
-local aiCloseBtn = Instance.new("TextButton")
-aiCloseBtn.Size = UDim2.new(0, 30, 0, 28)
-aiCloseBtn.Position = UDim2.new(1, -30, 0, 0)
-aiCloseBtn.BackgroundTransparency = 1
-aiCloseBtn.Text = "X"
-aiCloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-aiCloseBtn.Font = Enum.Font.Code
-aiCloseBtn.TextSize = 14
-aiCloseBtn.Parent = aiFrame
-
-local aiStatus = Instance.new("TextLabel")
-aiStatus.Size = UDim2.new(1, -16, 0, 24)
-aiStatus.Position = UDim2.new(0, 8, 0, 32)
-aiStatus.BackgroundTransparency = 1
-aiStatus.Text = "جاهز - اضغط زر التوليد لتحليل الكونسول وتوليد سكربت قوي"
-aiStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
-aiStatus.Font = Enum.Font.Code
-aiStatus.TextSize = 11
-aiStatus.TextXAlignment = Enum.TextXAlignment.Left
-aiStatus.Parent = aiFrame
-
-local aiGenerateBtn = Instance.new("TextButton")
-aiGenerateBtn.Size = UDim2.new(0, 250, 0, 34)
-aiGenerateBtn.Position = UDim2.new(0, 8, 0, 58)
-aiGenerateBtn.BackgroundColor3 = Color3.fromRGB(90, 40, 170)
-aiGenerateBtn.Text = "توليد سكربت من الكونسول ⚡"
-aiGenerateBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiGenerateBtn.Font = Enum.Font.Code
-aiGenerateBtn.TextSize = 13
-aiGenerateBtn.Parent = aiFrame
-
-local aiCopyBtn = Instance.new("TextButton")
-aiCopyBtn.Size = UDim2.new(0, 120, 0, 30)
-aiCopyBtn.Position = UDim2.new(0, 266, 0, 60)
-aiCopyBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
-aiCopyBtn.Text = "نسخ الكامل"
-aiCopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiCopyBtn.Font = Enum.Font.Code
-aiCopyBtn.TextSize = 12
-aiCopyBtn.Parent = aiFrame
-
-local aiEditBtn = Instance.new("TextButton")
-aiEditBtn.Size = UDim2.new(0, 120, 0, 30)
-aiEditBtn.Position = UDim2.new(0, 394, 0, 60)
-aiEditBtn.BackgroundColor3 = Color3.fromRGB(120, 80, 30)
-aiEditBtn.Text = "تعديل 📝"
-aiEditBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiEditBtn.Font = Enum.Font.Code
-aiEditBtn.TextSize = 12
-aiEditBtn.Parent = aiFrame
-
-local aiRunBtn = Instance.new("TextButton")
-aiRunBtn.Size = UDim2.new(0, 120, 0, 30)
-aiRunBtn.Position = UDim2.new(0, 490, 0, 60)
-aiRunBtn.BackgroundColor3 = Color3.fromRGB(130, 40, 40)
-aiRunBtn.Text = "تنفيذ ✓"
-aiRunBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiRunBtn.Font = Enum.Font.Code
-aiRunBtn.TextSize = 12
-aiRunBtn.Parent = aiFrame
-
-local aiScriptScroll = Instance.new("ScrollingFrame")
-aiScriptScroll.Size = UDim2.new(1, -16, 1, -150)
-aiScriptScroll.Position = UDim2.new(0, 8, 0, 102)
-aiScriptScroll.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-aiScriptScroll.BorderSizePixel = 1
-aiScriptScroll.ScrollBarThickness = 4
-aiScriptScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-aiScriptScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-aiScriptScroll.Parent = aiFrame
-
-local aiScriptLayout = Instance.new("UIListLayout")
-aiScriptLayout.Parent = aiScriptScroll
-aiScriptLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-local aiEditScroll = Instance.new("ScrollingFrame")
-aiEditScroll.Size = UDim2.new(1, -16, 0, 70)
-aiEditScroll.Position = UDim2.new(0, 8, 1, -80)
-aiEditScroll.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-aiEditScroll.BorderSizePixel = 1
-aiEditScroll.Visible = false
-aiEditScroll.Parent = aiFrame
-
-local aiEditLayout = Instance.new("UIListLayout")
-aiEditLayout.Padding = UDim.new(0, 3)
-aiEditLayout.Parent = aiEditScroll
-
-local aiEditInput = Instance.new("TextBox")
-aiEditInput.Size = UDim2.new(1, -90, 0, 64)
-aiEditInput.Position = UDim2.new(0, 3, 0, 3)
-aiEditInput.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-aiEditInput.PlaceholderText = "اكتب التعديل هنا... (مثال: ضيف ESP للخصوم، سوّيلهم سبيد أعلى، خلّص الهيتبوكس أحمر...)"
-aiEditInput.Text = ""
-aiEditInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiEditInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-aiEditInput.Font = Enum.Font.Code
-aiEditInput.TextSize = 12
-aiEditInput.TextXAlignment = Enum.TextXAlignment.Left
-aiEditInput.TextYAlignment = Enum.TextYAlignment.Top
-aiEditInput.Parent = aiEditScroll
-
-local aiEditSendBtn = Instance.new("TextButton")
-aiEditSendBtn.Size = UDim2.new(0, 84, 0, 64)
-aiEditSendBtn.Position = UDim2.new(1, -87, 0, 3)
-aiEditSendBtn.BackgroundColor3 = Color3.fromRGB(90, 40, 170)
-aiEditSendBtn.Text = "أرسل\nالتعديل"
-aiEditSendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-aiEditSendBtn.Font = Enum.Font.Code
-aiEditSendBtn.TextSize = 12
-aiEditSendBtn.Parent = aiEditScroll
-
-aiCloseBtn.MouseButton1Click:Connect(function() aiFrame.Visible = false end)
-
-openAIBtn.MouseButton1Click:Connect(function()
-    aiFrame.Visible = not aiFrame.Visible
-    if not aiFrame.Visible then aiEditScroll.Visible = false end
-end)
-
-local modelFrame = Instance.new("Frame")
-modelFrame.Size = UDim2.new(0, 340, 0, 150)
-modelFrame.Position = UDim2.new(0, 1030, 0, 385)
-modelFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-modelFrame.BorderSizePixel = 1
-modelFrame.BorderColor3 = Color3.fromRGB(200, 160, 50)
-modelFrame.Visible = false
-modelFrame.Active = false
-modelFrame.Parent = gui
-
-local modelTitle = Instance.new("TextLabel")
-modelTitle.Size = UDim2.new(1, -30, 0, 24)
-modelTitle.BackgroundColor3 = Color3.fromRGB(40, 35, 30)
-modelTitle.BorderSizePixel = 0
-modelTitle.Text = "  تغيير نموذج الذكاء الاصطناعي"
-modelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-modelTitle.Font = Enum.Font.Code
-modelTitle.TextSize = 12
-modelTitle.TextXAlignment = Enum.TextXAlignment.Left
-modelTitle.Active = true
-modelTitle.Parent = modelFrame
-makeDraggable(modelTitle, modelFrame)
-
-local modelCloseBtn = Instance.new("TextButton")
-modelCloseBtn.Size = UDim2.new(0, 30, 0, 24)
-modelCloseBtn.Position = UDim2.new(1, -30, 0, 0)
-modelCloseBtn.BackgroundTransparency = 1
-modelCloseBtn.Text = "X"
-modelCloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-modelCloseBtn.Font = Enum.Font.Code
-modelCloseBtn.TextSize = 12
-modelCloseBtn.Parent = modelFrame
-
-local modelHint = Instance.new("TextLabel")
-modelHint.Size = UDim2.new(1, -10, 0, 34)
-modelHint.Position = UDim2.new(0, 5, 0, 26)
-modelHint.BackgroundTransparency = 1
-modelHint.Text = "الصق اسم النموذج من OpenRouter:\nمثال: qwen/qwen3-coder:free | anthropic/claude-3.5-haiku"
-modelHint.TextColor3 = Color3.fromRGB(200, 200, 200)
-modelHint.Font = Enum.Font.Code
-modelHint.TextSize = 10
-modelHint.TextXAlignment = Enum.TextXAlignment.Left
-modelHint.TextWrapped = true
-modelHint.Parent = modelFrame
-
-local apiKeyInput = Instance.new("TextBox")
-apiKeyInput.Size = UDim2.new(1, -10, 0, 24)
-apiKeyInput.Position = UDim2.new(0, 5, 0, 62)
-apiKeyInput.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-apiKeyInput.PlaceholderText = "API Key: sk-or-v1-... (يُحفظ تلقائياً)"
-apiKeyInput.Text = ""
-apiKeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-apiKeyInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-apiKeyInput.Font = Enum.Font.Code
-apiKeyInput.TextSize = 11
-apiKeyInput.Parent = modelFrame
-
-local modelInput = Instance.new("TextBox")
-modelInput.Size = UDim2.new(1, -10, 0, 24)
-modelInput.Position = UDim2.new(0, 5, 0, 90)
-modelInput.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-modelInput.PlaceholderText = "google/gemma-3-27b-it:free"
-modelInput.Text = ""
-modelInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-modelInput.PlaceholderColor3 = Color3.fromRGB(130, 130, 140)
-modelInput.Font = Enum.Font.Code
-modelInput.TextSize = 11
-modelInput.Parent = modelFrame
-
-local modelApplyBtn = Instance.new("TextButton")
-modelApplyBtn.Size = UDim2.new(0, 100, 0, 24)
-modelApplyBtn.Position = UDim2.new(0, 5, 0, 118)
-modelApplyBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
-modelApplyBtn.Text = "تطبيق"
-modelApplyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-modelApplyBtn.Font = Enum.Font.Code
-modelApplyBtn.TextSize = 11
-modelApplyBtn.Parent = modelFrame
-
-modelCloseBtn.MouseButton1Click:Connect(function() modelFrame.Visible = false end)
-changeModelBtn.MouseButton1Click:Connect(function()
-    modelFrame.Visible = not modelFrame.Visible
-    modelInput.Text = AI_SETTINGS.MODEL
-    apiKeyInput.Text = ""
-end)
-
-apiKeyInput.FocusLost:Connect(function(enter)
-    if enter then
-        local k = apiKeyInput.Text:match("^%s*(.-)%s*$")
-        if k and k ~= "" then
-            saveApiKey(k)
-            aiStatus.Text = "تم حفظ مفتاح API ✓"
-            apiKeyInput.Text = ""
-        end
-    end
-end)
-
-modelApplyBtn.MouseButton1Click:Connect(function()
-    local k = apiKeyInput.Text:match("^%s*(.-)%s*$")
-    if k and k ~= "" then saveApiKey(k) end
-    apiKeyInput.Text = ""
-    local m = modelInput.Text:match("^%s*(.-)%s*$")
-    if m and m ~= "" then
-        AI_SETTINGS.MODEL = m
-        aiTitle.Text = "  [RE] AI Script Generator - Model: " .. AI_SETTINGS.MODEL
-        aiStatus.Text = "تم تغيير النموذج إلى: " .. m
-        modelFrame.Visible = false
-    elseif AI_SETTINGS.API_KEY ~= "" then
-        modelFrame.Visible = false
-    end
-end)
-
-local aiHistory = {}
-
-local AI_SYSTEM_PROMPT = [[أنت أقوى مبرمج سكربتات Roblox Lua في العالم. مهمتك توليد سكربت Lua (LocalScript) قوي جدًا واسطوري من تحليل سجل ريموتات الشبكة (Remote Console Log).
-
-القواعد:
-1. تنبيه مهم: الريموتات في السجل ليست فقط ريموتات أسلحة — تشمل كل أنواع شبكة اللعبة: ريموتات الضرر، القتل، الحركة، sprint، التحميل، الأدوات، المال/العملة، الـ spawn، المهارات وغيرها. حلل بدقة كل RemoteEvent (اسمه، مساره، اتجاهه، وسائطه) وافهم وظيفة كل واحد واستفد منه حسب نوعه.
-2. أنشئ سكربت كامل مع واجهة GUI بسيطة (ScreenGui) وأزرار تفعيلات قوية تستند مباشرة إلى الريموتات الموجودة - السكربت يجب أن يستغل الريموتات الحية في اللعبة عبر FireServer بوسائط صحيحة مستخرجة من الريموتات نفسها (مثل hitPosition, origin, direction, hitInstance, hitHumanoid).
-3. ضمّن هذه التفعيلات قدر الإمكان حسب الريموتات المتوفرة:
-   - Aimbot/Magic Bullet: يعدل جدول hitPosition إلى أقرب رأس على الشاشة ويضبط origin وdirection تلقائيًا (IsHeadshot=true إن وجد)
-   - Rapid Fire / Auto Shoot: يخاطب Remote الرمي (اسمه من الكونسول) تلقائيًا كل فريم بسرعة قصوى مع ملء المخزون وإيقاف أنيميشن التحميل
-   - No Cooldown / Inf Ammo: يعدّل ValueBase وAttributes للاسلحة
-   - God Mode / Infinite Health / Regen
-   - Invisible / NoClip / Anti-Stun / Anti-Knockback
-   - Speed / Jump Power
-   - ESP (Highlight أو صندوق BillboardGui)
-   - Kill Aura / Hitbox Extender على HumanoidRootPart الأعداء
-   - Any Remote abuse found in the console: FireServer on high-value remotes repeatedly (damage, kill, spawn, currency)
-4. السكربت يجب أن يكون: كامل وجاهز للتشغيل مباشرة (loadstring)، بدون أخطاء syntax، يستخدم pcall للحماية، يعمل في أي executor حديث (Synapse X, Delta, Fluxus, Solara, Arceus X)، يستخدم gethui() أو CoreGui، وبنية GUI مدمجة داخل السكربت نفسه.
-5. لا تشرح - فقط أرجع كود Lua كامل داخل بلوك ```lua ... ``` — لا تكتب أي كلام خارج البلوك.
-6. تأكد أن أسماء الريموتات والمواضع مطابقة تمامًا لما في سجل الكونسول.
-
-سجل الريموتات المرسل إليه:]]
-
-local function callOpenRouter(messages, callback)
-    if AI_SETTINGS.API_KEY == "" then
-        callback(false, "مطلوب مفتاح API - افتح تبويبة 'النموذج 🔧' والصق مفتاح OpenRouter الخاص بك (sk-or-v1-...)")
-        return
-    end
-    task.spawn(function()
-        local ok, result = pcall(function()
-            return HttpService:JSONEncode({
-                model = AI_SETTINGS.MODEL,
-                messages = messages,
-                max_tokens = 8000
-            })
-        end)
-        if not ok then
-            callback(false, "فشل تشفير الطلب: " .. tostring(result))
-            return
-        end
-
-        local resp = nil
-        if Safe.http_request then
-            local res = pcall(function()
-                return Safe.http_request({
-                    Url = AI_SETTINGS.ENDPOINT,
-                    Method = "POST",
-                    Headers = {
-                        ["Content-Type"] = "application/json",
-                        ["Authorization"] = "Bearer " .. AI_SETTINGS.API_KEY,
-                        ["HTTP-Referer"] = "https://openrouter.ai",
-                        ["X-Title"] = "RE Panel AI"
-                    },
-                    Body = result
-                })
-            end)
-            if res then resp = res.Body end
-        end
-
-        if not resp then
-            pcall(function()
-                local raw = game:HttpGet(AI_SETTINGS.ENDPOINT, false)
-                resp = raw
-            end)
-        end
-
-        if not resp then
-            callback(false, "فشل الاتصال بـ OpenRouter - تحقق من الإنترنت أو جرب executor يدعم http_request")
-            return
-        end
-
-        local decoded = pcall(function() return HttpService:JSONDecode(resp) end)
-        if decoded and resp.choices and #resp.choices > 0 then
-            local content = resp.choices[1].message.content
-            local code = content:match("```lua%s*(.-)%s*```") or content:match("```\n?(.-)\n?```") or content
-            callback(true, code, content)
-        else
-            callback(false, "رد غير صالح أو فارغ من النموذج - جرب نموذج آخر")
-        end
-    end)
-end
-
-local function clearAiOutput()
-    for _, c in ipairs(aiScriptScroll:GetChildren()) do if c:IsA("TextLabel") then c:Destroy() end end
-end
-
-local function showAiOutput(text)
-    clearAiOutput()
-    local lastLabel = nil
-    for line in text:gmatch("[^\r\n]+") do
-        local lbl = Instance.new("TextLabel")
-        lbl.Size = UDim2.new(1, -10, 0, 15)
-        lbl.BackgroundTransparency = 1
-        lbl.Text = line
-        lbl.TextColor3 = Color3.fromRGB(180, 255, 180)
-        lbl.Font = Enum.Font.Code
-        lbl.TextSize = 10
-        lbl.TextXAlignment = Enum.TextXAlignment.Left
-        lbl.TextWrapped = true
-        lbl.Parent = aiScriptScroll
-        lastLabel = lbl
-    end
-    if not lastLabel then
-        local lbl = Instance.new("TextLabel")
-        lbl.Size = UDim2.new(1, -10, 0, 15)
-        lbl.BackgroundTransparency = 1
-        lbl.Text = text
-        lbl.TextColor3 = Color3.fromRGB(180, 255, 180)
-        lbl.Font = Enum.Font.Code
-        lbl.TextSize = 10
-        lbl.TextXAlignment = Enum.TextXAlignment.Left
-        lbl.Parent = aiScriptScroll
-    end
-end
-
-local lastGeneratedScript = ""
-local lastFullResponse = ""
-local aiWorking = false
-
-local function runGeneration(messages, editMode)
-    if aiWorking then return end
-    aiWorking = true
-    aiGenerateBtn.Text = "جارٍ التوليد..."
-    aiGenerateBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-    aiCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    aiEditBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    aiStatus.Text = editMode and "جارٍ تطبيق التعديل..." or "جارٍ تحليل الكونسول وإرساله للذكاء الاصطناعي..."
-    clearAiOutput()
-
-    callOpenRouter(messages, function(success, code, full)
-        aiWorking = false
-        aiGenerateBtn.Text = "توليد سكربت من الكونسول ⚡"
-        aiGenerateBtn.BackgroundColor3 = Color3.fromRGB(90, 40, 170)
-        aiCopyBtn.BackgroundColor3 = Color3.fromRGB(50, 120, 50)
-        aiEditBtn.BackgroundColor3 = Color3.fromRGB(120, 80, 30)
-
-        if success then
-            lastGeneratedScript = code
-            lastFullResponse = full
-            showAiOutput(code)
-            aiStatus.Text = "تم التوليد بنجاح ✓ - اضغط نسخ الكامل ثم تنفيذ"
-            aiEditScroll.Visible = false
-        else
-            aiStatus.Text = "خطأ: " .. tostring(code)
-            showAiOutput("ERROR: " .. tostring(code))
-        end
-    end)
-end
-
-aiGenerateBtn.MouseButton1Click:Connect(function()
-    if #logsDatabase == 0 then
-        aiStatus.Text = "لا توجد ريموتات! فعّل التسجيل في Inspector وارمِ بالسلاح أولاً"
-        return
-    end
-
-    local consoleText = buildConsoleText()
-    local userMsg = {role = "user", content = consoleText}
-
-    aiHistory = {
-        {role = "system", content = AI_SYSTEM_PROMPT .. "\n" .. consoleText},
-        userMsg
-    }
-
-    runGeneration(aiHistory, false)
-end)
-
-aiCopyBtn.MouseButton1Click:Connect(function()
-    if lastGeneratedScript == "" then
-        aiStatus.Text = "لا يوجد سكربت لنسخه - ولّد أولاً"
-        return
-    end
-    if Safe.setclipboard then
-        pcall(function() Safe.setclipboard(lastGeneratedScript) end)
-        aiStatus.Text = "تم نسخ السكربت الكامل للحافظة ✓"
-        aiCopyBtn.Text = "تم النسخ!"
-        task.delay(1.5, function() aiCopyBtn.Text = "نسخ الكامل" end)
-    else
-        aiStatus.Text = "setclipboard غير مدعوم في هذا الـ executor"
-    end
-end)
-
-aiEditBtn.MouseButton1Click:Connect(function()
-    if lastGeneratedScript == "" then
-        aiStatus.Text = "لا يوجد سكربت - ولّد أولاً ثم عدّل"
-        return
-    end
-    aiEditScroll.Visible = not aiEditScroll.Visible
-    if aiEditScroll.Visible then
-        aiEditInput:CaptureFocus()
-    end
-end)
-
-aiEditSendBtn.MouseButton1Click:Connect(function()
-    local edit = aiEditInput.Text:match("^%s*(.-)%s*$")
-    if not edit or edit == "" then return end
-
-    aiEditInput.Text = ""
-    aiEditScroll.Visible = false
-
-    table.insert(aiHistory, {role = "user", content = "التعديل المطلوب: " .. edit .. "\n\nأرسل السكربت الكامل المعدل داخل بلوك ```lua ... ``` بدون أي كلام خارجه."})
-
-    runGeneration(aiHistory, true)
-end)
-
-aiRunBtn.MouseButton1Click:Connect(function()
-    if lastGeneratedScript == "" then
-        aiStatus.Text = "لا يوجد سكربت لتنفيذه"
-        return
-    end
-    local ok, err = pcall(function() loadstring(lastGeneratedScript)() end)
-    if ok then
-        aiStatus.Text = "تم تنفيذ السكربت ✓"
-    else
-        aiStatus.Text = "فشل التنفيذ: " .. tostring(err)
-    end
-end)
-
-local hookInfo = hookInstalled and "ON" or "OFF"
-print("[RE Panel] Loaded. Outgoing hook: " .. hookInfo)
-print("[RE Panel] APIs: getrawmetatable=" .. tostring(Safe.getrawmetatable ~= nil) .. " newcclosure=" .. tostring(Safe.newcclosure ~= nil) .. " checkcaller=" .. tostring(Safe.checkcaller ~= nil))
 
