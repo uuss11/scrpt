@@ -218,23 +218,39 @@ Safe.http_request = function(options)
         reportError("HTTP", "HTTP API unavailable")
         return nil, "HTTP API unavailable"
     end
-    local ok, response = pcall(requestFunction, options)
-    if not ok then
-        reportError("HTTP", response)
-        return nil, "HTTP request exception: " .. tostring(response)
+
+    local maxRetries = 3
+    local backoffDelay = 1.5
+    local lastResponse = nil
+    local lastError = nil
+
+    for attempt = 1, maxRetries do
+        local ok, response = pcall(requestFunction, options)
+        if not ok then
+            lastError = response
+            reportError("HTTP", response)
+        else
+            lastResponse = response
+            if type(response) == "table" then
+                local status = tonumber(response.StatusCode or response.status_code or response.Status or response.status)
+                if status == 429 and attempt < maxRetries then
+                    pcall(function() warn(string.format("[RE] HTTP 429 Rate Limit encountered. Retrying in %.1fs (attempt %d/%d)...", backoffDelay, attempt, maxRetries)) end)
+                    task.wait(backoffDelay)
+                    backoffDelay = backoffDelay * 2
+                else
+                    return response
+                end
+            else
+                return response
+            end
+        end
+        if attempt < maxRetries then
+            task.wait(backoffDelay)
+            backoffDelay = backoffDelay * 2
+        end
     end
-    if type(response) ~= "table" then
-        reportError("HTTP", "Request returned invalid response")
-        return nil, "HTTP request returned invalid response"
-    end
-    local status = tonumber(response.StatusCode or response.status_code or response.Status or response.status)
-    if status and (status < 200 or status >= 300) then
-        local body = tostring(response.Body or response.body or "")
-        body = #body > 500 and string.sub(body, 1, 500) .. "..." or body
-        reportError("HTTP", string.format("HTTP %d: %s", status, body))
-        return nil, string.format("HTTP %d: %s", status, body ~= "" and body or "Request failed")
-    end
-    return response
+
+    return lastResponse, lastError and ("HTTP request exception: " .. tostring(lastError)) or "HTTP request failed after retries"
 end
 Safe.canHook = Native.getrawmetatable ~= nil and Native.newcclosure ~= nil and Native.getnamecallmethod ~= nil and Native.setreadonly ~= nil
 
@@ -258,10 +274,10 @@ local INSPECTOR_SETTINGS = {
 }
 
 local AI_SUMMARY_SETTINGS = {
-    MaxGroups = 80,
-    MaxSummaryLength = 18000,
-    MaxValueLength = 260,
-    MaxChatMessages = 6
+    MaxGroups = 35,
+    MaxSummaryLength = 8000,
+    MaxValueLength = 160,
+    MaxChatMessages = 4
 }
 
 local DEFAULT_AI_MODEL = "google/gemma-4-26b-a4b-it:free"
@@ -1251,42 +1267,38 @@ local function callOpenRouter(userPromptText)
         local payloadData = {
             model = selectedModel,
             messages = chatHistory,
-            max_tokens = 8000,
+            max_tokens = 4000,
             temperature = 0.2,
             stream = false
         }
 
-        local requestSuccess, response, requestError = pcall(function()
-            return Safe.http_request({
-                Url = "https://openrouter.ai/api/v1/chat/completions",
-                Method = "POST",
-                Headers = {
-                    ["Content-Type"] = "application/json",
-                    ["Accept"] = "application/json",
-                    ["Authorization"] = "Bearer " .. savedApiKey,
-                    ["HTTP-Referer"] = "https://openrouter.ai",
-                    ["X-Title"] = "RE Panel AI"
-                },
-                Body = HttpService:JSONEncode(payloadData)
-            })
-        end)
+        local response, requestError = Safe.http_request({
+            Url = "https://openrouter.ai/api/v1/chat/completions",
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["Accept"] = "application/json",
+                ["Authorization"] = "Bearer " .. savedApiKey,
+                ["HTTP-Referer"] = "https://openrouter.ai",
+                ["X-Title"] = "RE Panel AI"
+            },
+            Body = HttpService:JSONEncode(payloadData)
+        })
 
-        local responseBody = requestSuccess and responseField(response, "Body", "body") or nil
+        local responseBody = responseField(response, "Body", "body")
         local statusCode = tonumber(responseField(response, "StatusCode", "status_code", "Status", "status"))
-        local responseOk = requestSuccess and response ~= nil and (statusCode == nil or (statusCode >= 200 and statusCode < 300))
         local decoded = nil
         local decodeSuccess = false
         if responseBody ~= nil then
             decodeSuccess, decoded = pcall(function() return HttpService:JSONDecode(tostring(responseBody)) end)
         end
 
-        if not requestSuccess then
-            Safe.reportError("HTTP", response)
-            appendAiOutput("HTTP request exception: " .. tostring(response), Color3.fromRGB(255, 70, 70))
-        elseif response == nil then
+        if response == nil then
             appendAiOutput(tostring(requestError or "HTTP API unavailable"), Color3.fromRGB(255, 70, 70))
-        elseif not responseOk then
-            appendAiOutput(string.format("فشل OpenRouter%s: %s", statusCode and (" [HTTP " .. tostring(statusCode) .. "]") or "", extractApiError(responseBody, decoded)), Color3.fromRGB(255, 70, 70))
+        elseif statusCode and (statusCode < 200 or statusCode >= 300) then
+            local errDetail = extractApiError(responseBody, decoded)
+            Safe.reportError("HTTP", string.format("HTTP %d: %s", statusCode, errDetail))
+            appendAiOutput(string.format("فشل OpenRouter [HTTP %d]: %s", statusCode, errDetail), Color3.fromRGB(255, 70, 70))
         elseif responseBody == nil then
             appendAiOutput("HTTP response body غير موجود", Color3.fromRGB(255, 70, 70))
         elseif not decodeSuccess then
